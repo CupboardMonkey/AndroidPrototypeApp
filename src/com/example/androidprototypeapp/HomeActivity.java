@@ -1,6 +1,8 @@
 package com.example.androidprototypeapp;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.UUID;
 import android.app.Activity;
@@ -16,6 +18,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.Menu;
+import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -159,7 +162,7 @@ public class HomeActivity extends Activity implements AnimationListener {
 
 	}
 
-	public void newButton(String name) {
+	public void newButton(String name, final BluetoothSocket socket) {
 		ViewGroup linearLayout = (ViewGroup) findViewById(R.id.home_page);
 
 		//Button button = (Button)getLayoutInflater().inflate(R.layout.button_light, null);
@@ -178,10 +181,42 @@ public class HomeActivity extends Activity implements AnimationListener {
 		appear(b);
 
 		//linearLayout.addView(b);
+		System.out.println("New button");
+		Button.OnClickListener btnclick = new Button.OnClickListener(){
 
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				v.playSoundEffect(SoundEffectConstants.CLICK);
+				InputStream inStream;
+				OutputStream outStream;
+				try {
+
+					System.out.println("here");
+
+					outStream = socket.getOutputStream();
+					String message = "r";
+					byte[] toSend = message.getBytes();
+					outStream.write(toSend);
+
+					inStream = socket.getInputStream();
+					int received = inStream.read();
+					System.out.println(received);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+
+			}
+
+		};
+
+
+		b.setOnClickListener(btnclick);
 	}
 
-	public void easynewButton(String name) {
+	public void easynewButton(String name, final BluetoothSocket socket) {
 		ViewGroup linearLayout = (ViewGroup) findViewById(R.id.home_page);
 
 		Button b = new Button(this);
@@ -193,6 +228,54 @@ public class HomeActivity extends Activity implements AnimationListener {
 
 		linearLayout.addView(b);
 
+		Button.OnClickListener btnclick = new Button.OnClickListener(){
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				//v.playSoundEffect(SoundEffectConstants.CLICK);
+				InputStream inStream;
+				OutputStream outStream;
+				try {
+
+					System.out.println("here");
+
+					outStream = socket.getOutputStream();
+					String message = "r";
+					byte[] toSend = message.getBytes();
+					outStream.write(toSend);
+
+					inStream = socket.getInputStream();
+
+					byte byt[] = new byte[1];
+					int received = inStream.read(byt, 0, 1);
+					inStream.read();
+					inStream.read();
+					if(received == 1) {
+						
+						if(((int)byt[0] & 0xff) == '0') {
+							message = "1";
+							toSend = message.getBytes();
+							outStream.write(toSend);
+						} else if(((int)byt[0] & 0xff) == '1') {
+							message = "0";
+							toSend = message.getBytes();
+							outStream.write(toSend);
+						}
+						System.out.println("Changed from " + ((int)byt[0] & 0xff));
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+
+			}
+
+		};
+
+
+		b.setOnClickListener(btnclick);
 
 	}
 
@@ -312,13 +395,13 @@ public class HomeActivity extends Activity implements AnimationListener {
 							l.removeAllViews();
 						}
 						devices.add(new BTConnection(device, mmSocket));
-						easynewButton(device.getName());
+						easynewButton(device.getName(), mmSocket);
 
 					} else {
-						Toast.makeText(getApplicationContext(), "Not Connected:\n" + device.getName() + "\n" + device.getAddress() 
-								,Toast.LENGTH_SHORT).show();
-						System.out.println("Not Connected");
-						easynewButton(device.getName());
+						//						Toast.makeText(getApplicationContext(), "Not Connected:\n" + device.getName() + "\n" + device.getAddress() 
+						//								,Toast.LENGTH_SHORT).show();
+						//						System.out.println("Not Connected");
+						//						easynewButton(device.getName());
 					}
 
 				}
