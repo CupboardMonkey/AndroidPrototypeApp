@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Button xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="300dp"
+    android:layout_height="80dp"
+    android:layout_marginLeft="10dp"
+    android:layout_marginTop="10dp"
+    android:background="@drawable/button_background"
+    android:drawableLeft="@drawable/light_icon"
+    android:drawableRight="@drawable/blank"
+    android:onClick="lightSwitch"
+    android:text="@string/light_switch"
+    android:textColor="@color/text_blue" />

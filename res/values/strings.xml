@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <!-- App Details -->    
+    <string name="app_name">Android Prototype</string>
+    <string name="action_settings">Settings</string>
+    
+    <!-- Home Labels -->
+    <string name="light_switch">Light Switch</string>
+    <string name="central_heating">Central Heating</string>
+    <string name="tv">Television</string>
+    <string name="other_thing">Other</string>
+    
+    <!-- Page Titles -->
+    <string name="title_activity_main">Home</string>
+    <string name="title_activity_light_switch">Light Switch Mode</string>
+    <string name="title_activity_central_heating">Central Heating Mode</string>
+    <string name="title_activity_television">Television Mode</string>
+
+    <!-- Colours -->
+    <color name="text_blue">#00a2e8</color>
+    
+</resources>
