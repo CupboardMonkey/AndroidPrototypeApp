@@ -57,6 +57,7 @@ public class HomeActivity extends Activity implements AnimationListener {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		BA = BluetoothAdapter.getDefaultAdapter();
+ 
 		if(!loaded) {
 			loaded = true;
 			setContentView(R.layout.logo_screen);
@@ -86,9 +87,10 @@ public class HomeActivity extends Activity implements AnimationListener {
 		startActivity(intent);
 	}
 
-	public void television(View view) {
+	public void television(SocketData data) {
 		// Do something in response to button
-		Intent intent = new Intent(this, TelevisionActivity.class);
+		System.out.println("Making intent. Data: " + data);
+		Intent intent = new Intent(this, TelevisionActivity.class).putExtra("SocketData",data);
 		startActivity(intent);
 	}
 
@@ -145,23 +147,6 @@ public class HomeActivity extends Activity implements AnimationListener {
 
 	}
 
-	public void newButton(View view) {
-		ViewGroup linearLayout = (ViewGroup) findViewById(R.id.home_page);
-
-		Button button = (Button)getLayoutInflater().inflate(R.layout.button_light, null);
-
-		Button b = new Button(this);
-		//b.setBackgroundResource(R.layout.button_light);
-		b.setAlpha(0f);
-		linearLayout.addView(b);
-
-		b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.light_on, 0, R.drawable.blank, 0);
-		appear(b);
-
-		//linearLayout.addView(b);
-
-	}
-
 	public void newButton(String name, final BluetoothSocket socket) {
 		ViewGroup linearLayout = (ViewGroup) findViewById(R.id.home_page);
 
@@ -186,7 +171,6 @@ public class HomeActivity extends Activity implements AnimationListener {
 
 			@Override
 			public void onClick(View v) {
-				// TODO Auto-generated method stub
 				v.playSoundEffect(SoundEffectConstants.CLICK);
 				InputStream inStream;
 				OutputStream outStream;
@@ -279,6 +263,35 @@ public class HomeActivity extends Activity implements AnimationListener {
 
 	}
 
+	public void easyTVButton(String name, final BluetoothSocket socket) {
+		ViewGroup linearLayout = (ViewGroup) findViewById(R.id.home_page);
+
+		Button b = new Button(this);
+		b.setMinimumWidth(300);
+		b.setMinimumHeight(80);
+		b.setText(name);
+		b.setTextColor(Color.argb(255, 0, 162, 232));
+		b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.tv_icon, 0, R.drawable.blank, 0);
+
+		linearLayout.addView(b);
+
+		Button.OnClickListener btnclick = new Button.OnClickListener(){
+
+			@Override
+			public void onClick(View v) {
+				
+				television(new SocketData(socket));
+
+			}
+
+		};
+
+
+		b.setOnClickListener(btnclick);
+
+	}
+	
+	
 	//public void phase (View view) {
 	//		animFadeIn = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in);
 	//		animFadeIn.setAnimationListener(this);
@@ -394,8 +407,8 @@ public class HomeActivity extends Activity implements AnimationListener {
 							LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
 							l.removeAllViews();
 						}
-						devices.add(new BTConnection(device, mmSocket));
-						easynewButton(device.getName(), mmSocket);
+						devices.add(new BTConnection(device, mmSocket, device.getName()));
+						easyTVButton(device.getName(), mmSocket);
 
 					} else {
 						//						Toast.makeText(getApplicationContext(), "Not Connected:\n" + device.getName() + "\n" + device.getAddress() 
