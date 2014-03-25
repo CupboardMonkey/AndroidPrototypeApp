@@ -50,7 +50,8 @@ public class HomeActivity extends Activity implements AnimationListener {
 	ImageView c;
 	ImageView blank;
 	Boolean reset = false;
-
+	//MyApplication socketDetails;
+	
 	private BluetoothAdapter BA;
 
 	@Override
@@ -58,6 +59,7 @@ public class HomeActivity extends Activity implements AnimationListener {
 		super.onCreate(savedInstanceState);
 		BA = BluetoothAdapter.getDefaultAdapter();
  
+		
 		if(!loaded) {
 			loaded = true;
 			setContentView(R.layout.logo_screen);
@@ -87,10 +89,9 @@ public class HomeActivity extends Activity implements AnimationListener {
 		startActivity(intent);
 	}
 
-	public void television(SocketData data) {
-		// Do something in response to button
-		System.out.println("Making intent. Data: " + data);
-		Intent intent = new Intent(this, TelevisionActivity.class).putExtra("SocketData",data);
+	public void television(String address) {
+		Intent intent = new Intent(this, TelevisionActivity.class);
+		intent.putExtra("Address", address);
 		startActivity(intent);
 	}
 
@@ -280,7 +281,7 @@ public class HomeActivity extends Activity implements AnimationListener {
 			@Override
 			public void onClick(View v) {
 				
-				television(new SocketData(socket));
+				television(socket.getRemoteDevice().getAddress());
 
 			}
 
@@ -385,18 +386,17 @@ public class HomeActivity extends Activity implements AnimationListener {
 						mmSocket = tmp;
 
 
-
-						try {
+//						try {
 							// Connect the device through the socket. This will block
 							// until it succeeds or throws an exception
-							mmSocket.connect();
+//							mmSocket.connect();
 
-						} catch (IOException connectException) {
+//						} catch (IOException connectException) {
 							// Unable to connect; close the socket and get out
-							try {
-								mmSocket.close();
-							} catch (IOException closeException) { }
-						}
+//							try {
+//								mmSocket.close();
+//							} catch (IOException closeException) { }
+//						}
 
 						Toast.makeText(getApplicationContext(), "Connected:\n" + device.getName() + "\n" + device.getAddress() 
 								,Toast.LENGTH_SHORT).show();
@@ -407,7 +407,7 @@ public class HomeActivity extends Activity implements AnimationListener {
 							LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
 							l.removeAllViews();
 						}
-						devices.add(new BTConnection(device, mmSocket, device.getName()));
+//						devices.add(new BTConnection(device, mmSocket, device.getName()));
 						easyTVButton(device.getName(), mmSocket);
 
 					} else {
@@ -426,5 +426,5 @@ public class HomeActivity extends Activity implements AnimationListener {
 		registerReceiver(BR, filter);
 
 	}
-
+	
 }

@@ -31,28 +31,30 @@ public final class R {
         public static final int activity_vertical_margin=0x7f050001;
     }
     public static final class drawable {
-        public static final int blank=0x7f020000;
-        public static final int box=0x7f020001;
-        public static final int button_background=0x7f020002;
-        public static final int cover=0x7f020003;
-        public static final int header=0x7f020004;
-        public static final int heating_icon=0x7f020005;
-        public static final int ic_launcher=0x7f020006;
-        public static final int light_icon=0x7f020007;
-        public static final int light_off=0x7f020008;
-        public static final int light_on=0x7f020009;
-        public static final int logo=0x7f02000a;
-        public static final int refresh=0x7f02000b;
-        public static final int scroll_cover=0x7f02000c;
-        public static final int settings=0x7f02000d;
-        public static final int tv_icon=0x7f02000e;
-        public static final int unknown=0x7f02000f;
+        public static final int add=0x7f020000;
+        public static final int blank=0x7f020001;
+        public static final int box=0x7f020002;
+        public static final int button_background=0x7f020003;
+        public static final int cover=0x7f020004;
+        public static final int header=0x7f020005;
+        public static final int heating_icon=0x7f020006;
+        public static final int ic_launcher=0x7f020007;
+        public static final int light_icon=0x7f020008;
+        public static final int light_off=0x7f020009;
+        public static final int light_on=0x7f02000a;
+        public static final int logo=0x7f02000b;
+        public static final int refresh=0x7f02000c;
+        public static final int scroll_cover=0x7f02000d;
+        public static final int settings=0x7f02000e;
+        public static final int tv_icon=0x7f02000f;
+        public static final int unknown=0x7f020010;
     }
     public static final class id {
-        public static final int action_settings=0x7f0a0004;
+        public static final int action_settings=0x7f0a0005;
         public static final int header=0x7f0a0002;
         public static final int home_page=0x7f0a0003;
         public static final int light_on_off=0x7f0a0000;
+        public static final int remote=0x7f0a0004;
         public static final int select_brightness=0x7f0a0001;
     }
     public static final class layout {
