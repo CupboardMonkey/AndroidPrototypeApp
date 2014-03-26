@@ -42,6 +42,7 @@
         </activity>
         <activity
             android:name="com.example.androidprototypeapp.TelevisionActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/title_activity_television" >
         </activity>
     </application>

@@ -5,6 +5,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.UUID;
+
+import com.google.gson.Gson;
+
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -13,6 +16,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -29,9 +33,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+
 public class HomeActivity extends Activity implements AnimationListener {
 	public final static String EXTRA_MESSAGE = "com.example.androidprototypeapp.MESSAGE";
 	public Boolean loaded = false;
+	public static final String PREFS_NAME = "MyPrefsFile";
 
 	BluetoothDevice mmDevice;
 	BluetoothSocket mmSocket;
@@ -42,6 +48,9 @@ public class HomeActivity extends Activity implements AnimationListener {
 		@Override
 		public void handleMessage(Message msg) {
 			setContentView(R.layout.activity_main);
+			System.out.println("Should be refreshing");
+			refresh();
+			System.out.println("Should be refreshed");
 		}
 	};
 	Animation animFadeIn;
@@ -51,22 +60,25 @@ public class HomeActivity extends Activity implements AnimationListener {
 	ImageView blank;
 	Boolean reset = false;
 	//MyApplication socketDetails;
-	
+
 	private BluetoothAdapter BA;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		BA = BluetoothAdapter.getDefaultAdapter();
- 
-		
-		if(!loaded) {
-			loaded = true;
+
+
+		//if(!loaded) {
+			//loaded = true;
 			setContentView(R.layout.logo_screen);
 			handler.sendMessageDelayed(new Message(), 2000);
-		} else {
-			setContentView(R.layout.activity_main);
-		}
+		//} else {
+			
+			
+			//setContentView(R.layout.activity_main);
+			
+		//}
 
 	}
 
@@ -75,18 +87,6 @@ public class HomeActivity extends Activity implements AnimationListener {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
-	}
-
-	public void lightSwitch(View view) {
-		// Do something in response to button
-		Intent intent = new Intent(this, LightSwitchActivity.class);
-		startActivity(intent);
-	}
-
-	public void centralHeating(View view) {
-		// Do something in response to button
-		Intent intent = new Intent(this, CentralHeatingActivity.class);
-		startActivity(intent);
 	}
 
 	public void television(String address) {
@@ -237,7 +237,7 @@ public class HomeActivity extends Activity implements AnimationListener {
 					inStream.read();
 					inStream.read();
 					if(received == 1) {
-						
+
 						if(((int)byt[0] & 0xff) == '0') {
 							message = "1";
 							toSend = message.getBytes();
@@ -280,7 +280,7 @@ public class HomeActivity extends Activity implements AnimationListener {
 
 			@Override
 			public void onClick(View v) {
-				
+
 				television(socket.getRemoteDevice().getAddress());
 
 			}
@@ -291,8 +291,8 @@ public class HomeActivity extends Activity implements AnimationListener {
 		b.setOnClickListener(btnclick);
 
 	}
-	
-	
+
+
 	//public void phase (View view) {
 	//		animFadeIn = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in);
 	//		animFadeIn.setAnimationListener(this);
@@ -348,6 +348,10 @@ public class HomeActivity extends Activity implements AnimationListener {
 	}
 
 	public void refresh(View view) {
+		refresh();
+	}
+	
+	public void refresh() {
 
 		if(BA.isDiscovering()) {
 			BA.cancelDiscovery();
@@ -386,17 +390,17 @@ public class HomeActivity extends Activity implements AnimationListener {
 						mmSocket = tmp;
 
 
-//						try {
-							// Connect the device through the socket. This will block
-							// until it succeeds or throws an exception
-//							mmSocket.connect();
+						//						try {
+						// Connect the device through the socket. This will block
+						// until it succeeds or throws an exception
+						//							mmSocket.connect();
 
-//						} catch (IOException connectException) {
-							// Unable to connect; close the socket and get out
-//							try {
-//								mmSocket.close();
-//							} catch (IOException closeException) { }
-//						}
+						//						} catch (IOException connectException) {
+						// Unable to connect; close the socket and get out
+						//							try {
+						//								mmSocket.close();
+						//							} catch (IOException closeException) { }
+						//						}
 
 						Toast.makeText(getApplicationContext(), "Connected:\n" + device.getName() + "\n" + device.getAddress() 
 								,Toast.LENGTH_SHORT).show();
@@ -407,8 +411,16 @@ public class HomeActivity extends Activity implements AnimationListener {
 							LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
 							l.removeAllViews();
 						}
-//						devices.add(new BTConnection(device, mmSocket, device.getName()));
-						easyTVButton(device.getName(), mmSocket);
+
+						//String name = "Unknown Device";
+						SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+
+						//if(settings.contains(device.getAddress()))
+						String name = settings.getString(device.getAddress(), "Unknown Device");
+
+
+						//						devices.add(new BTConnection(device, mmSocket, device.getName()));
+						easyTVButton(name, mmSocket);
 
 					} else {
 						//						Toast.makeText(getApplicationContext(), "Not Connected:\n" + device.getName() + "\n" + device.getAddress() 
@@ -426,5 +438,34 @@ public class HomeActivity extends Activity implements AnimationListener {
 		registerReceiver(BR, filter);
 
 	}
-	
+
+	public void renamePreference(String key, String text) {
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		SharedPreferences.Editor editor = settings.edit();
+
+		editor.putString(key, text);
+		editor.commit();
+	}
+
+	public void saveObject(String key, Object o) {
+
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		SharedPreferences.Editor editor = settings.edit();
+
+		Gson gson = new Gson();
+		String json = gson.toJson(o);
+		editor.putString(key, json);
+		editor.commit();
+	}
+
+	public ChannelData getChannelData(String key) {
+
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+
+		Gson gson = new Gson();
+
+		String json = settings.getString(key, "");
+		ChannelData obj = gson.fromJson(json, ChannelData.class);
+		return obj;
+	}
 }

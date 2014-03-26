@@ -9,11 +9,13 @@ import java.util.UUID;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
@@ -21,10 +23,19 @@ import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 
+import android.view.ActionMode;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -191,7 +202,7 @@ public class TelevisionActivity extends Activity {
 	}
 
 	public void loadButtons() {
-		
+
 		if(signals.size() > 0) {
 			System.out.println("Refreshing");
 			ViewGroup layout = (ViewGroup) findViewById(R.id.remote);
@@ -209,13 +220,13 @@ public class TelevisionActivity extends Activity {
 		create(temp);
 		idCounter++;
 	}
-	
+
 	public void create(final ChannelData cd) {
 
 		int id = cd.getId();
 		final ArrayList<Integer> code = cd.getCode();
 		String label = cd.getLabel();
-		
+
 		Button b = new Button(this);
 
 		b.setMinimumWidth(300);
@@ -223,13 +234,13 @@ public class TelevisionActivity extends Activity {
 		b.setText(label);
 		b.setTextColor(Color.argb(255, 0, 162, 232));
 
-		Button b1 = new Button(this);
+		final Button b1 = new Button(this);
 
-		b1.setMinimumWidth(80);
-		b1.setMinimumHeight(80);
-		b1.setText("Record");
+		b1.setHeight(60);
+		b1.setWidth(60);
+		b1.setBackgroundResource(R.drawable.settings);
 		b1.setTextColor(Color.argb(255, 0, 162, 232));
-
+		b1.setTag(cd.getId());
 
 		Button.OnClickListener btnclick = new Button.OnClickListener(){
 
@@ -269,7 +280,7 @@ public class TelevisionActivity extends Activity {
 					out.write(toSend);
 
 					System.out.println("Sent, waiting");
-					
+
 					cd.setCode(getArray(in));
 					System.out.println(cd.getCode().toString());
 					loadButtons();
@@ -284,7 +295,43 @@ public class TelevisionActivity extends Activity {
 
 		};
 
-		b1.setOnClickListener(btnset);
+		Button.OnClickListener popup = new Button.OnClickListener() {  
+
+			@Override  
+			public void onClick(final View v) {  
+				//Creating the instance of PopupMenu  
+				PopupMenu popup = new PopupMenu(getApplicationContext(), b1);  
+				//Inflating the Popup using xml file  
+				popup.getMenuInflater().inflate(R.menu.popup_menu, popup.getMenu());  
+
+				//registering popup with OnMenuItemClickListener  
+				popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
+					public boolean onMenuItemClick(MenuItem item) {  
+						if(item.getTitle().equals("Rename")) {
+							//Keyboard popup
+							Toast.makeText(getBaseContext(),"Rename " + v.getTag(),Toast.LENGTH_SHORT).show();
+							rename((Integer) v.getTag());
+						} else if(item.getTitle().equals("Record")) {
+							//Record bit
+							Toast.makeText(getBaseContext(),"Record " + v.getTag(),Toast.LENGTH_SHORT).show();
+							record((Integer) v.getTag());
+						} else if(item.getTitle().equals("Delete")) {
+							//Delete button, entry in arraylist and sharedpreferences
+							Toast.makeText(getBaseContext(),"Delete " + v.getTag(),Toast.LENGTH_SHORT).show();
+							delete((Integer) v.getTag());
+						} 
+						//Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(),Toast.LENGTH_SHORT).show();  
+						return true;  
+					}  
+				});  
+
+				popup.show();//showing popup menu  
+			}  
+		};//closing the setOnClickListener method  
+
+
+		//		b1.setOnClickListener(btnset);
+		b1.setOnClickListener(popup);
 		ViewGroup layout = (ViewGroup) findViewById(R.id.remote);
 		LinearLayout LL = new LinearLayout(this);
 		LL.addView(b);
@@ -293,6 +340,91 @@ public class TelevisionActivity extends Activity {
 
 	}
 
+	public ChannelData getCDbyID(int id) {
+		for(ChannelData cd : signals) {
+			if(cd.getId() == id) {
+				return cd;
+			}
+		}
+		return null;
+	}
+
+	public void rename(int id) {
+		final ChannelData cd = getCDbyID(id);
+		if(cd != null) {
+
+
+			AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+			alert.setTitle("Title");
+			alert.setMessage("Message");
+
+			// Set an EditText view to get user input 
+			final EditText input = new EditText(this);
+			input.setText(cd.getLabel());
+
+			alert.setTitle("Rename");
+			alert.setMessage("Rename button to:");
+			alert.setView(input);
+
+			alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int whichButton) {
+
+					//Toast.makeText(getBaseContext(),"Did something: " + input.getText(),Toast.LENGTH_LONG).show();
+					cd.setLabel(input.getText().toString());
+					loadButtons();
+				}
+			});
+
+			alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int whichButton) {
+					// Canceled.
+				}
+			});
+
+			alert.show();
+
+
+		} else {
+			Toast.makeText(getBaseContext(),"Cannot find data",Toast.LENGTH_LONG).show();
+		}
+
+	}
+
+	public void record(int id) {
+		try {
+
+			ChannelData cd = getCDbyID(id);
+			if(cd != null) {
+				String message = "0";
+				byte[] toSend = message.getBytes();
+				out.write(toSend);
+
+				//System.out.println("Sent, waiting");
+
+				cd.setCode(getArray(in));
+				//System.out.println(cd.getCode().toString());
+				loadButtons();
+			} else {
+				Toast.makeText(getBaseContext(),"Cannot find data",Toast.LENGTH_LONG).show();
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void delete(int id) {
+		ChannelData cd = getCDbyID(id);
+		if(cd != null) {
+			
+			signals.remove(cd);
+			loadButtons();
+			
+		} else {
+			Toast.makeText(getBaseContext(),"Cannot find data",Toast.LENGTH_LONG).show();
+		}
+	}
 
 }
 

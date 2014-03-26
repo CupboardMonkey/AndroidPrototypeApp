@@ -29,53 +29,17 @@
             android:onClick="refresh" />
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/home_page"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@android:color/black"
-        android:orientation="vertical" >
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
 
-        <!-- <Button -->
-        <!-- android:id="@+id/new_light" -->
-        <!-- android:layout_width="300dp" -->
-        <!-- android:layout_height="80dp" -->
-        <!-- android:layout_marginLeft="10dp" -->
-        <!-- android:layout_marginTop="10dp" -->
-        <!-- android:alpha="0" -->
-        <!-- android:background="@drawable/button_background" -->
-        <!-- android:drawableLeft="@drawable/light_off" -->
-        <!-- android:onClick="lightSwitch" -->
-        <!-- android:text="Light Switch" -->
-        <!-- android:textColor="@color/text_blue" /> -->
-
-
-        <!-- <Button -->
-        <!-- android:id="@+id/appear" -->
-        <!-- android:layout_width="300dp" -->
-        <!-- android:layout_height="80dp" -->
-        <!-- android:layout_marginLeft="10dp" -->
-        <!-- android:layout_marginTop="10dp" -->
-        <!-- android:background="@drawable/button_background" -->
-        <!-- android:drawableLeft="@drawable/unknown" -->
-        <!-- android:onClick="phase" -->
-        <!-- android:text="Appear" -->
-        <!-- android:textColor="@color/text_blue" /> -->
-
-
-        <!-- <Button -->
-        <!-- android:id="@+id/appear" -->
-        <!-- android:layout_width="wrap_content" -->
-        <!-- android:layout_height="wrap_content" -->
-        <!-- android:layout_marginLeft="10dp" -->
-        <!-- android:layout_marginTop="10dp" -->
-        <!-- android:background="@drawable/button_background" -->
-        <!-- android:drawableLeft="@drawable/unknown" -->
-        <!-- android:drawableRight="@drawable/blank" -->
-        <!-- android:onClick="newButton" -->
-        <!-- android:text="Appear" -->
-        <!-- android:textColor="@color/text_blue" /> -->
-
-    </LinearLayout>
+        <LinearLayout
+            android:id="@+id/home_page"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/black"
+            android:orientation="vertical" >
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>
