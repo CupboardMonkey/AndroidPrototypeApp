@@ -9,11 +9,13 @@ import java.util.UUID;
 import com.google.gson.Gson;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -22,6 +24,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,12 +32,14 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Animation.AnimationListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
 
-public class HomeActivity extends Activity implements AnimationListener {
+public class HomeActivity extends Activity implements AnimationListener  {
 	public final static String EXTRA_MESSAGE = "com.example.androidprototypeapp.MESSAGE";
 	public Boolean loaded = false;
 	public static final String PREFS_NAME = "MyPrefsFile";
@@ -42,17 +47,26 @@ public class HomeActivity extends Activity implements AnimationListener {
 	BluetoothDevice mmDevice;
 	BluetoothSocket mmSocket;
 	ArrayList<BTConnection> devices = new ArrayList<BTConnection>();
+	ArrayList<String> storedDevices = new ArrayList<String>();
+
 	private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
 	private Handler handler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
 			setContentView(R.layout.activity_main);
-			System.out.println("Should be refreshing");
 			refresh();
-			System.out.println("Should be refreshed");
 		}
 	};
+	
+	private Handler discoverHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			Button ref = (Button) findViewById(R.id.refresh);
+			ref.setEnabled(true);	
+		}
+	};
+	
 	Animation animFadeIn;
 	Animation moveRight;
 	int count = 0;
@@ -70,14 +84,14 @@ public class HomeActivity extends Activity implements AnimationListener {
 
 
 		//if(!loaded) {
-			//loaded = true;
-			setContentView(R.layout.logo_screen);
-			handler.sendMessageDelayed(new Message(), 2000);
+		//loaded = true;
+		setContentView(R.layout.logo_screen);
+		handler.sendMessageDelayed(new Message(), 2000);
 		//} else {
-			
-			
-			//setContentView(R.layout.activity_main);
-			
+
+
+		//setContentView(R.layout.activity_main);
+
 		//}
 
 	}
@@ -202,16 +216,13 @@ public class HomeActivity extends Activity implements AnimationListener {
 	}
 
 	public void easynewButton(String name, final BluetoothSocket socket) {
-		ViewGroup linearLayout = (ViewGroup) findViewById(R.id.home_page);
-
 		Button b = new Button(this);
 		b.setMinimumWidth(300);
 		b.setMinimumHeight(80);
 		b.setText(name);
 		b.setTextColor(Color.argb(255, 0, 162, 232));
-		b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.unknown, 0, R.drawable.blank, 0);
+		b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.light_off, 0, R.drawable.blank, 0);
 
-		linearLayout.addView(b);
 
 		Button.OnClickListener btnclick = new Button.OnClickListener(){
 
@@ -261,20 +272,55 @@ public class HomeActivity extends Activity implements AnimationListener {
 
 
 		b.setOnClickListener(btnclick);
+		final Button b1 = new Button(this);
+
+		b1.setHeight(60);
+		b1.setWidth(60);
+		b1.setBackgroundResource(R.drawable.settings);
+		b1.setTextColor(Color.argb(255, 0, 162, 232));
+		b1.setTag(R.string.zero, socket.getRemoteDevice().getAddress());
+		b1.setTag(R.string.one, b);
+		Button.OnClickListener popup = new Button.OnClickListener() {  
+
+			@Override  
+			public void onClick(final View v) {  
+				//Creating the instance of PopupMenu  
+				PopupMenu popup = new PopupMenu(getApplicationContext(), b1);  
+				//Inflating the Popup using xml file  
+				popup.getMenuInflater().inflate(R.menu.device_options, popup.getMenu());  
+
+				//registering popup with OnMenuItemClickListener  
+				popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
+					public boolean onMenuItemClick(MenuItem item) {  
+						if(item.getTitle().equals("Rename")) {
+							rename(v.getTag(R.string.zero), v.getTag(R.string.one));
+						}
+						//Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(),Toast.LENGTH_SHORT).show();  
+						return true;  
+					}  
+				});  
+
+				popup.show();//showing popup menu  
+			}  
+		};//closing the setOnClickListener method
+		b1.setOnClickListener(popup);
+
+		ViewGroup layout = (ViewGroup) findViewById(R.id.home_page);
+		LinearLayout LL = new LinearLayout(this);
+		LL.addView(b);
+		LL.addView(b1);
+		layout.addView(LL);
 
 	}
 
 	public void easyTVButton(String name, final BluetoothSocket socket) {
-		ViewGroup linearLayout = (ViewGroup) findViewById(R.id.home_page);
-
+		System.out.println("Making new button");
 		Button b = new Button(this);
 		b.setMinimumWidth(300);
 		b.setMinimumHeight(80);
 		b.setText(name);
 		b.setTextColor(Color.argb(255, 0, 162, 232));
 		b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.tv_icon, 0, R.drawable.blank, 0);
-
-		linearLayout.addView(b);
 
 		Button.OnClickListener btnclick = new Button.OnClickListener(){
 
@@ -290,6 +336,44 @@ public class HomeActivity extends Activity implements AnimationListener {
 
 		b.setOnClickListener(btnclick);
 
+		final Button b1 = new Button(this);
+
+		b1.setHeight(60);
+		b1.setWidth(60);
+		b1.setBackgroundResource(R.drawable.settings);
+		b1.setTextColor(Color.argb(255, 0, 162, 232));
+		b1.setTag(R.string.zero, socket.getRemoteDevice().getAddress());
+		b1.setTag(R.string.one, b);
+		Button.OnClickListener popup = new Button.OnClickListener() {  
+
+			@Override  
+			public void onClick(final View v) {  
+				//Creating the instance of PopupMenu  
+				PopupMenu popup = new PopupMenu(getApplicationContext(), b1);  
+				//Inflating the Popup using xml file  
+				popup.getMenuInflater().inflate(R.menu.device_options, popup.getMenu());  
+
+				//registering popup with OnMenuItemClickListener  
+				popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
+					public boolean onMenuItemClick(MenuItem item) {  
+						if(item.getTitle().equals("Rename")) {
+							rename(v.getTag(R.string.zero), v.getTag(R.string.one));
+						}
+						//Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(),Toast.LENGTH_SHORT).show();  
+						return true;  
+					}  
+				});  
+
+				popup.show();//showing popup menu  
+			}  
+		};//closing the setOnClickListener method
+		b1.setOnClickListener(popup);
+
+		ViewGroup layout = (ViewGroup) findViewById(R.id.home_page);
+		LinearLayout LL = new LinearLayout(this);
+		LL.addView(b);
+		LL.addView(b1);
+		layout.addView(LL);
 	}
 
 
@@ -350,9 +434,12 @@ public class HomeActivity extends Activity implements AnimationListener {
 	public void refresh(View view) {
 		refresh();
 	}
-	
+
 	public void refresh() {
 
+		Button ref = (Button) findViewById(R.id.refresh);
+		ref.setEnabled(false);
+		reset = false;
 		if(BA.isDiscovering()) {
 			BA.cancelDiscovery();
 		}
@@ -360,7 +447,8 @@ public class HomeActivity extends Activity implements AnimationListener {
 				,Toast.LENGTH_SHORT).show();
 
 		BA.startDiscovery();
-
+		discoverHandler.sendMessageDelayed(new Message(), 12000);
+		
 		BroadcastReceiver BR = new BroadcastReceiver() {
 			public void onReceive(Context context, Intent intent) {
 
@@ -370,65 +458,95 @@ public class HomeActivity extends Activity implements AnimationListener {
 				{
 					// Get the BluetoothDevice object from the Intent
 					BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-					// Add the name and address to an array adapter to show in a ListView
-					//mArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-
-
 
 					BluetoothSocket tmp = null;
 					mmDevice = device;
 
-					System.out.println(device.getName());
+					//If it's an Instantaneous Actuator
+					if(mmDevice.getName().equals("MagMobIA")) {
+						if(!storedDevices.contains(mmDevice.getAddress())) {
+							storedDevices.add(mmDevice.getAddress());
+							// Get a BluetoothSocket to connect with the given BluetoothDevice
+							try {
+								// MY_UUID is the app's UUID string, also used by the server code
+								tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
+								//tempDevice = device;
+							} catch (IOException e) { }
+							mmSocket = tmp;
 
-					if(mmDevice.getName().equals("HC-05")) {
-						// Get a BluetoothSocket to connect with the given BluetoothDevice
-						try {
-							// MY_UUID is the app's UUID string, also used by the server code
-							tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
-							//tempDevice = device;
-						} catch (IOException e) { }
-						mmSocket = tmp;
+
+							try {
+								//Connect the device through the socket. This will block
+								//until it succeeds or throws an exception
+								mmSocket.connect();
+							} catch (IOException connectException) {
+								//Unable to connect; close the socket and get out
+								try {
+									mmSocket.close();
+								} catch (IOException closeException) { }
+							}
+
+							if(!reset) {
+								reset = true;
+								devices.clear();
+								storedDevices.clear();
+								LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
+								l.removeAllViews();
+							}
+
+							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+							String name = settings.getString(device.getAddress(), "Unknown Device");
 
 
-						//						try {
-						// Connect the device through the socket. This will block
-						// until it succeeds or throws an exception
-						//							mmSocket.connect();
-
-						//						} catch (IOException connectException) {
-						// Unable to connect; close the socket and get out
-						//							try {
-						//								mmSocket.close();
-						//							} catch (IOException closeException) { }
-						//						}
-
-						Toast.makeText(getApplicationContext(), "Connected:\n" + device.getName() + "\n" + device.getAddress() 
-								,Toast.LENGTH_SHORT).show();
-						System.out.println("Connected");
-						if(!reset) {
-							reset = true;
-							devices.clear();
-							LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
-							l.removeAllViews();
+							//						devices.add(new BTConnection(device, mmSocket, device.getName()));
+							easynewButton(name, mmSocket);
+							
+							//Else it's a Transmitter Actuator
 						}
+					} else if(mmDevice.getName().equals("MagMobTA")) {
+						if(!storedDevices.contains(mmDevice.getAddress())) {
+							storedDevices.add(mmDevice.getAddress());
+							// Get a BluetoothSocket to connect with the given BluetoothDevice
+							try {
+								// MY_UUID is the app's UUID string, also used by the server code
+								tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
+								//tempDevice = device;
+							} catch (IOException e) { }
+							mmSocket = tmp;
 
-						//String name = "Unknown Device";
-						SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 
-						//if(settings.contains(device.getAddress()))
-						String name = settings.getString(device.getAddress(), "Unknown Device");
+							try {
+								//Connect the device through the socket. This will block
+								//until it succeeds or throws an exception
+								mmSocket.connect();
+							} catch (IOException connectException) {
+								//Unable to connect; close the socket and get out
+								try {
+									mmSocket.close();
+								} catch (IOException closeException) { }
+							}
+
+							try {
+								mmSocket.close();
+							} catch (IOException closeException) { }
+							
+							if(!reset) {
+								reset = true;
+								devices.clear();
+								storedDevices.clear();
+								System.out.println("size: " + devices.size());
+								LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
+								l.removeAllViews();
+							}
+
+							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+							String name = settings.getString(device.getAddress(), "Unknown Device");
 
 
-						//						devices.add(new BTConnection(device, mmSocket, device.getName()));
-						easyTVButton(name, mmSocket);
-
-					} else {
-						//						Toast.makeText(getApplicationContext(), "Not Connected:\n" + device.getName() + "\n" + device.getAddress() 
-						//								,Toast.LENGTH_SHORT).show();
-						//						System.out.println("Not Connected");
-						//						easynewButton(device.getName());
-					}
-
+							//						devices.add(new BTConnection(device, mmSocket, device.getName()));
+							easyTVButton(name, mmSocket);
+						}
+					} 
 				}
 			}
 
@@ -447,25 +565,42 @@ public class HomeActivity extends Activity implements AnimationListener {
 		editor.commit();
 	}
 
-	public void saveObject(String key, Object o) {
+	public void rename(Object addressObj, Object buttonObj) {
 
-		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-		SharedPreferences.Editor editor = settings.edit();
+		final String address = addressObj.toString();
+		final Button b = (Button) buttonObj;
 
-		Gson gson = new Gson();
-		String json = gson.toJson(o);
-		editor.putString(key, json);
-		editor.commit();
+		AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+		alert.setTitle("Title");
+		alert.setMessage("Message");
+
+		// Set an EditText view to get user input 
+		final EditText input = new EditText(this);
+		input.setText(b.getText());
+
+		alert.setTitle("Rename");
+		alert.setMessage("Rename button to:");
+		alert.setView(input);
+
+		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int whichButton) {
+
+				//Toast.makeText(getBaseContext(),"Did something: " + input.getText(),Toast.LENGTH_LONG).show();
+				b.setText(input.getText().toString());
+
+				renamePreference(address, input.getText().toString());
+
+			}
+		});
+
+		alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int whichButton) {
+				// Canceled.
+			}
+		});
+
+		alert.show();
 	}
 
-	public ChannelData getChannelData(String key) {
-
-		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-
-		Gson gson = new Gson();
-
-		String json = settings.getString(key, "");
-		ChannelData obj = gson.fromJson(json, ChannelData.class);
-		return obj;
-	}
 }

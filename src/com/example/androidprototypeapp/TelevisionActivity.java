@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.gson.Gson;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -18,6 +20,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -42,6 +45,7 @@ import android.widget.Toast;
 public class TelevisionActivity extends Activity {
 
 	private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+	public static final String PREFS_NAME = "MyPrefsFile";
 	BluetoothDevice device;
 	BluetoothSocket sock;
 
@@ -56,28 +60,14 @@ public class TelevisionActivity extends Activity {
 	@SuppressLint("NewApi")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		System.out.println("In tv activity");
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.activity_television);
-
-		//
-		//		System.out.println("Got data");
-
-		//		in = socketDetails.getInStream();
-		//		out = socketDetails.getOutStream();
-
-		System.out.println("Getting intent");
 		Intent intenty = getIntent();
-		System.out.println("Got intent");
-
 		String address = intenty.getStringExtra("Address");
-		System.out.println(address);
-
 		getDetails(address);
-
 		System.out.println("Got all details, making buttons");
-
+		loadSavedButtons();
 		System.out.println("Created buttons");
 	}
 
@@ -99,13 +89,16 @@ public class TelevisionActivity extends Activity {
 		System.out.println(size);
 		for(int i = 0; i < size; i++) {
 			intList.add(getInt(in));
-			System.out.println(i + ": " + intList.get(i));
+			//			System.out.println(i + ": " + intList.get(i));
 		}
 
-		System.out.println("Items received: " + intList.size());
+		//		System.out.println("Items received: " + intList.size());
 		//for(int i = 0; i < intList.size(); i++) {
 		//System.out.println(i + ": " + intList.get(i));
 		//}
+
+
+		System.out.println(intList.toString());
 
 		return intList;
 
@@ -125,7 +118,7 @@ public class TelevisionActivity extends Activity {
 				int intIn = in.read();
 				if(intIn < 128 && intIn > 47) {
 					c = ((char) intIn);
-					System.out.println(intIn + " = " + c);
+					//					System.out.println(intIn + " = " + c);
 					//System.out.println(c);
 					if(c == 'x') {
 						System.out.println("Finished reading. Result is: " + temp);
@@ -137,7 +130,7 @@ public class TelevisionActivity extends Activity {
 				}
 				else {
 					c = ((char) intIn);
-					System.out.println("Bad: " + intIn + " = " + c);
+					//					System.out.println("Bad: " + intIn + " = " + c);
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -156,7 +149,7 @@ public class TelevisionActivity extends Activity {
 			out.write(toSend);
 			toSend = ("x").getBytes();
 			out.write(toSend);
-			System.out.println("Sent out: " + i);
+			//			System.out.println("Sent out: " + i);
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -166,11 +159,11 @@ public class TelevisionActivity extends Activity {
 
 	public void sendIntArray(ArrayList<Integer> intList, OutputStream out, InputStream in) {
 
-		System.out.println("Sending size: " + intList.size());
+		//		System.out.println("Sending size: " + intList.size());
 		sendInt(intList.size(), out);
 
 		for(int i = 0; i < intList.size(); i++) {
-			System.out.println("Sending  " + i + ": " + intList.get(i));
+			//			System.out.println("Sending  " + i + ": " + intList.get(i));
 			sendInt(intList.get(i), out);
 		}
 
@@ -210,8 +203,8 @@ public class TelevisionActivity extends Activity {
 			for (int i = 0; i < signals.size(); i++) {
 				create(signals.get(i));
 			}
-		}
-
+			saveButtons();
+		}	
 	}
 
 	public void newCreate(View view) {
@@ -219,6 +212,7 @@ public class TelevisionActivity extends Activity {
 		signals.add(temp);
 		create(temp);
 		idCounter++;
+		saveButtons();
 	}
 
 	public void create(final ChannelData cd) {
@@ -279,10 +273,10 @@ public class TelevisionActivity extends Activity {
 					byte[] toSend = message.getBytes();
 					out.write(toSend);
 
-					System.out.println("Sent, waiting");
+					//					System.out.println("Sent, waiting");
 
 					cd.setCode(getArray(in));
-					System.out.println(cd.getCode().toString());
+					//					System.out.println(cd.getCode().toString());
 					loadButtons();
 
 				} catch (IOException e) {
@@ -302,22 +296,22 @@ public class TelevisionActivity extends Activity {
 				//Creating the instance of PopupMenu  
 				PopupMenu popup = new PopupMenu(getApplicationContext(), b1);  
 				//Inflating the Popup using xml file  
-				popup.getMenuInflater().inflate(R.menu.popup_menu, popup.getMenu());  
+				popup.getMenuInflater().inflate(R.menu.transmitter_options, popup.getMenu());  
 
 				//registering popup with OnMenuItemClickListener  
 				popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
 					public boolean onMenuItemClick(MenuItem item) {  
 						if(item.getTitle().equals("Rename")) {
 							//Keyboard popup
-							Toast.makeText(getBaseContext(),"Rename " + v.getTag(),Toast.LENGTH_SHORT).show();
+							//Toast.makeText(getBaseContext(),"Rename " + v.getTag(),Toast.LENGTH_SHORT).show();
 							rename((Integer) v.getTag());
 						} else if(item.getTitle().equals("Record")) {
 							//Record bit
-							Toast.makeText(getBaseContext(),"Record " + v.getTag(),Toast.LENGTH_SHORT).show();
+							//Toast.makeText(getBaseContext(),"Record " + v.getTag(),Toast.LENGTH_SHORT).show();
 							record((Integer) v.getTag());
 						} else if(item.getTitle().equals("Delete")) {
 							//Delete button, entry in arraylist and sharedpreferences
-							Toast.makeText(getBaseContext(),"Delete " + v.getTag(),Toast.LENGTH_SHORT).show();
+							//Toast.makeText(getBaseContext(),"Delete " + v.getTag(),Toast.LENGTH_SHORT).show();
 							delete((Integer) v.getTag());
 						} 
 						//Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(),Toast.LENGTH_SHORT).show();  
@@ -328,7 +322,6 @@ public class TelevisionActivity extends Activity {
 				popup.show();//showing popup menu  
 			}  
 		};//closing the setOnClickListener method  
-
 
 		//		b1.setOnClickListener(btnset);
 		b1.setOnClickListener(popup);
@@ -417,12 +410,92 @@ public class TelevisionActivity extends Activity {
 	public void delete(int id) {
 		ChannelData cd = getCDbyID(id);
 		if(cd != null) {
-			
+
 			signals.remove(cd);
 			loadButtons();
-			
+
 		} else {
 			Toast.makeText(getBaseContext(),"Cannot find data",Toast.LENGTH_LONG).show();
+		}
+	}
+
+	@Override
+	protected void onStop() {
+		// TODO Auto-generated method stub
+		super.onStop();
+		System.out.println("Left activity");
+		try {
+			sock.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void saveButtons() {
+
+		System.out.println("In save for address: " + device.getAddress());
+		
+		System.out.println("Size: " + signals.size());
+		if(signals.size() > 0) {
+
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+			SharedPreferences.Editor editor = settings.edit();
+
+			editor.putInt(device.getAddress()+"size", signals.size());
+			editor.commit();
+
+			for (int i = 0; i < signals.size(); i++) {
+				saveObject(device.getAddress()+i, signals.get(i));
+				System.out.println("Saved: " + device.getAddress()+i);
+			}
+		}
+
+	}
+
+	public void renamePreference(String key, String text) {
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		SharedPreferences.Editor editor = settings.edit();
+
+		editor.putString(key, text);
+		editor.commit();
+	}
+
+	public void saveObject(String key, Object o) {
+
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		SharedPreferences.Editor editor = settings.edit();
+
+		Gson gson = new Gson();
+		String json = gson.toJson(o);
+		editor.putString(key, json);
+		editor.commit();
+	}
+
+	public ChannelData getChannelData(String key) {
+
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+
+		Gson gson = new Gson();
+
+		String json = settings.getString(key, "");
+		ChannelData obj = gson.fromJson(json, ChannelData.class);
+		return obj;
+	}
+
+	public void loadSavedButtons() {
+		System.out.println("In load for address: " + device.getAddress());
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		String add = device.getAddress();
+		int size = settings.getInt(add+"size", 0);
+		System.out.println("Size: " + size);
+		if(size > 0) {
+			for(int i = 0; i < size; i++) {
+				ChannelData cd = getChannelData(add+i);
+				signals.add(cd);
+				System.out.println(cd.getId() + " " + cd.getLabel());
+			}
+			loadButtons();
 		}
 	}
 

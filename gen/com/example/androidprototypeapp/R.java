@@ -50,12 +50,13 @@ public final class R {
         public static final int unknown=0x7f020010;
     }
     public static final class id {
-        public static final int action_settings=0x7f0a0003;
-        public static final int delete=0x7f0a0006;
+        public static final int action_settings=0x7f0a0005;
+        public static final int delete=0x7f0a0007;
         public static final int header=0x7f0a0000;
-        public static final int home_page=0x7f0a0001;
-        public static final int record=0x7f0a0005;
-        public static final int remote=0x7f0a0002;
+        public static final int home_page=0x7f0a0002;
+        public static final int record=0x7f0a0006;
+        public static final int refresh=0x7f0a0001;
+        public static final int remote=0x7f0a0003;
         public static final int rename=0x7f0a0004;
     }
     public static final class layout {
@@ -65,27 +66,32 @@ public final class R {
         public static final int logo_screen=0x7f030003;
     }
     public static final class menu {
-        public static final int display_message=0x7f090000;
-        public static final int main=0x7f090001;
-        public static final int popup_menu=0x7f090002;
+        public static final int device_options=0x7f090000;
+        public static final int display_message=0x7f090001;
+        public static final int main=0x7f090002;
+        public static final int transmitter_options=0x7f090003;
     }
     public static final class string {
         public static final int action_settings=0x7f060001;
         /**  App Details 
          */
         public static final int app_name=0x7f060000;
-        public static final int central_heating=0x7f060003;
+        public static final int central_heating=0x7f060005;
         /**  Home Labels 
          */
-        public static final int light_switch=0x7f060002;
-        public static final int other_thing=0x7f060005;
-        public static final int title_activity_central_heating=0x7f060008;
-        public static final int title_activity_light_switch=0x7f060007;
+        public static final int light_switch=0x7f060004;
+        public static final int one=0x7f060003;
+        public static final int other_thing=0x7f060007;
+        public static final int title_activity_central_heating=0x7f06000a;
+        public static final int title_activity_light_switch=0x7f060009;
         /**  Page Titles 
          */
-        public static final int title_activity_main=0x7f060006;
-        public static final int title_activity_television=0x7f060009;
-        public static final int tv=0x7f060004;
+        public static final int title_activity_main=0x7f060008;
+        public static final int title_activity_television=0x7f06000b;
+        public static final int tv=0x7f060006;
+        /**  Constants 
+         */
+        public static final int zero=0x7f060002;
     }
     public static final class style {
         /** 

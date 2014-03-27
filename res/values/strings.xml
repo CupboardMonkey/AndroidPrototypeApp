@@ -5,6 +5,10 @@
     <string name="app_name">Android Prototype</string>
     <string name="action_settings">Settings</string>
     
+    <!-- Constants -->
+    <string name="zero">0</string>
+    <string name="one">1</string>
+    
     <!-- Home Labels -->
     <string name="light_switch">Light Switch</string>
     <string name="central_heating">Central Heating</string>
