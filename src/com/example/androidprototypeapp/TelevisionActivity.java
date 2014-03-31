@@ -54,7 +54,7 @@ public class TelevisionActivity extends Activity {
 
 	ArrayList<Integer> channelCode;
 	ArrayList<ChannelData> signals = new ArrayList<ChannelData>();
-
+	BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
 	int idCounter = 0;
 
 	@SuppressLint("NewApi")
@@ -66,7 +66,10 @@ public class TelevisionActivity extends Activity {
 		Intent intenty = getIntent();
 		String address = intenty.getStringExtra("Address");
 		getDetails(address);
-		System.out.println("Got all details, making buttons");
+		//System.out.println("Getting sock intent");
+		//sock = getSocket(intenty.getStringExtra("Socket"));
+		System.out.println("Got sock intent");
+		
 		loadSavedButtons();
 		System.out.println("Created buttons");
 	}
@@ -172,11 +175,18 @@ public class TelevisionActivity extends Activity {
 
 
 	public void getDetails(String address) {
-		BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
 		device = BA.getRemoteDevice(address);
+		System.out.println(device);
+		
 		try {
+			System.out.println("In getdetails");
 			sock = device.createRfcommSocketToServiceRecord(MY_UUID);
+			System.out.println("created sock");
+			System.out.println(sock.isConnected());
+			System.out.println(sock);
 			sock.connect();
+			System.out.println("Connecting");
+			System.out.println(sock.isConnected());
 			in = sock.getInputStream();
 			out = sock.getOutputStream();
 		} catch (IOException e) {
@@ -302,16 +312,10 @@ public class TelevisionActivity extends Activity {
 				popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
 					public boolean onMenuItemClick(MenuItem item) {  
 						if(item.getTitle().equals("Rename")) {
-							//Keyboard popup
-							//Toast.makeText(getBaseContext(),"Rename " + v.getTag(),Toast.LENGTH_SHORT).show();
 							rename((Integer) v.getTag());
 						} else if(item.getTitle().equals("Record")) {
-							//Record bit
-							//Toast.makeText(getBaseContext(),"Record " + v.getTag(),Toast.LENGTH_SHORT).show();
 							record((Integer) v.getTag());
 						} else if(item.getTitle().equals("Delete")) {
-							//Delete button, entry in arraylist and sharedpreferences
-							//Toast.makeText(getBaseContext(),"Delete " + v.getTag(),Toast.LENGTH_SHORT).show();
 							delete((Integer) v.getTag());
 						} 
 						//Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(),Toast.LENGTH_SHORT).show();  
@@ -433,10 +437,6 @@ public class TelevisionActivity extends Activity {
 	}
 
 	public void saveButtons() {
-
-		System.out.println("In save for address: " + device.getAddress());
-		
-		System.out.println("Size: " + signals.size());
 		if(signals.size() > 0) {
 
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
@@ -447,7 +447,6 @@ public class TelevisionActivity extends Activity {
 
 			for (int i = 0; i < signals.size(); i++) {
 				saveObject(device.getAddress()+i, signals.get(i));
-				System.out.println("Saved: " + device.getAddress()+i);
 			}
 		}
 
@@ -482,18 +481,22 @@ public class TelevisionActivity extends Activity {
 		ChannelData obj = gson.fromJson(json, ChannelData.class);
 		return obj;
 	}
+	
+	public BluetoothSocket getSocket(String sockString) {
+
+		Gson gson = new Gson();
+		BluetoothSocket obj = gson.fromJson(sockString, BluetoothSocket.class);
+		return obj;
+	}
 
 	public void loadSavedButtons() {
-		System.out.println("In load for address: " + device.getAddress());
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		String add = device.getAddress();
 		int size = settings.getInt(add+"size", 0);
-		System.out.println("Size: " + size);
 		if(size > 0) {
 			for(int i = 0; i < size; i++) {
 				ChannelData cd = getChannelData(add+i);
 				signals.add(cd);
-				System.out.println(cd.getId() + " " + cd.getLabel());
 			}
 			loadButtons();
 		}

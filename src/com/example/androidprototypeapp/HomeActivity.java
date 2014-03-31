@@ -58,15 +58,19 @@ public class HomeActivity extends Activity implements AnimationListener  {
 			refresh();
 		}
 	};
-	
+
 	private Handler discoverHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
 			Button ref = (Button) findViewById(R.id.refresh);
 			ref.setEnabled(true);	
+			if(BA.isDiscovering()) {
+				System.out.println("Would have cancelled");
+				//BA.cancelDiscovery();
+			}
 		}
 	};
-	
+
 	Animation animFadeIn;
 	Animation moveRight;
 	int count = 0;
@@ -81,7 +85,6 @@ public class HomeActivity extends Activity implements AnimationListener  {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		BA = BluetoothAdapter.getDefaultAdapter();
-
 
 		//if(!loaded) {
 		//loaded = true;
@@ -106,6 +109,10 @@ public class HomeActivity extends Activity implements AnimationListener  {
 	public void television(String address) {
 		Intent intent = new Intent(this, TelevisionActivity.class);
 		intent.putExtra("Address", address);
+		System.out.println("Intent has address");
+		//intent.putExtra("Socket", objectToString(sock));
+
+		//System.out.println("Intent has sock");
 		startActivity(intent);
 	}
 
@@ -221,7 +228,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		b.setMinimumHeight(80);
 		b.setText(name);
 		b.setTextColor(Color.argb(255, 0, 162, 232));
-		b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.light_off, 0, R.drawable.blank, 0);
+		b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.light_off, 0, 0, 0);
 
 
 		Button.OnClickListener btnclick = new Button.OnClickListener(){
@@ -313,22 +320,29 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 	}
 
-	public void easyTVButton(String name, final BluetoothSocket socket) {
+	public void easyTVButton(String name, final BluetoothDevice device) {
 		System.out.println("Making new button");
 		Button b = new Button(this);
 		b.setMinimumWidth(300);
 		b.setMinimumHeight(80);
 		b.setText(name);
 		b.setTextColor(Color.argb(255, 0, 162, 232));
-		b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.tv_icon, 0, R.drawable.blank, 0);
+		b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.tv_icon, 0, 0, 0);
 
 		Button.OnClickListener btnclick = new Button.OnClickListener(){
 
 			@Override
 			public void onClick(View v) {
 
-				television(socket.getRemoteDevice().getAddress());
-
+				System.out.println("Making television jump");
+				//try {
+				//socket.close();
+				//} catch (IOException e) {
+				// TODO Auto-generated catch block
+				//	e.printStackTrace();
+				//}
+				//television(socket.getRemoteDevice().getAddress(), socket);
+				television(device.getAddress());
 			}
 
 		};
@@ -342,7 +356,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		b1.setWidth(60);
 		b1.setBackgroundResource(R.drawable.settings);
 		b1.setTextColor(Color.argb(255, 0, 162, 232));
-		b1.setTag(R.string.zero, socket.getRemoteDevice().getAddress());
+		b1.setTag(R.string.zero, device.getAddress());
 		b1.setTag(R.string.one, b);
 		Button.OnClickListener popup = new Button.OnClickListener() {  
 
@@ -448,7 +462,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 		BA.startDiscovery();
 		discoverHandler.sendMessageDelayed(new Message(), 12000);
-		
+
 		BroadcastReceiver BR = new BroadcastReceiver() {
 			public void onReceive(Context context, Intent intent) {
 
@@ -462,19 +476,21 @@ public class HomeActivity extends Activity implements AnimationListener  {
 					BluetoothSocket tmp = null;
 					mmDevice = device;
 
-					//If it's an Instantaneous Actuator
-					if(mmDevice.getName().equals("MagMobIA")) {
+					if(mmDevice.getName().startsWith("MagMob")) {
 						if(!storedDevices.contains(mmDevice.getAddress())) {
 							storedDevices.add(mmDevice.getAddress());
 							// Get a BluetoothSocket to connect with the given BluetoothDevice
+							/*
 							try {
 								// MY_UUID is the app's UUID string, also used by the server code
+								System.out.println("Tmp making");
 								tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
+								System.out.println("Tmp made");
+
 								//tempDevice = device;
 							} catch (IOException e) { }
 							mmSocket = tmp;
-
-
+							System.out.println(mmSocket);
 							try {
 								//Connect the device through the socket. This will block
 								//until it succeeds or throws an exception
@@ -482,10 +498,11 @@ public class HomeActivity extends Activity implements AnimationListener  {
 							} catch (IOException connectException) {
 								//Unable to connect; close the socket and get out
 								try {
+									connectException.printStackTrace();
 									mmSocket.close();
 								} catch (IOException closeException) { }
 							}
-
+*/
 							if(!reset) {
 								reset = true;
 								devices.clear();
@@ -498,54 +515,15 @@ public class HomeActivity extends Activity implements AnimationListener  {
 							String name = settings.getString(device.getAddress(), "Unknown Device");
 
 
-							//						devices.add(new BTConnection(device, mmSocket, device.getName()));
-							easynewButton(name, mmSocket);
-							
-							//Else it's a Transmitter Actuator
-						}
-					} else if(mmDevice.getName().equals("MagMobTA")) {
-						if(!storedDevices.contains(mmDevice.getAddress())) {
-							storedDevices.add(mmDevice.getAddress());
-							// Get a BluetoothSocket to connect with the given BluetoothDevice
-							try {
-								// MY_UUID is the app's UUID string, also used by the server code
-								tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
-								//tempDevice = device;
-							} catch (IOException e) { }
-							mmSocket = tmp;
-
-
-							try {
-								//Connect the device through the socket. This will block
-								//until it succeeds or throws an exception
-								mmSocket.connect();
-							} catch (IOException connectException) {
-								//Unable to connect; close the socket and get out
-								try {
-									mmSocket.close();
-								} catch (IOException closeException) { }
+							if(mmDevice.getName().equals("MagMobIA")) {
+								easynewButton(name, mmSocket);
+							} else if(mmDevice.getName().equals("MagMobTA")) {
+								easyTVButton(name, mmDevice);
 							}
-
-							try {
-								mmSocket.close();
-							} catch (IOException closeException) { }
-							
-							if(!reset) {
-								reset = true;
-								devices.clear();
-								storedDevices.clear();
-								System.out.println("size: " + devices.size());
-								LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
-								l.removeAllViews();
-							}
-
-							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-							String name = settings.getString(device.getAddress(), "Unknown Device");
-
-
-							//						devices.add(new BTConnection(device, mmSocket, device.getName()));
-							easyTVButton(name, mmSocket);
+						} else {
+							System.out.println("ALREADY IN");
 						}
+						
 					} 
 				}
 			}
@@ -596,11 +574,21 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 		alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
-				// Canceled.
+				// Cancelled.
 			}
 		});
 
 		alert.show();
+	}
+
+	public String objectToString(Object o) {
+		System.out.println("New gson");
+		Gson gson = new Gson();
+		System.out.println("json = gson to json");
+		String json = gson.toJson(o);
+		System.out.println("json: " + json);
+		return json;
+
 	}
 
 }
