@@ -10,8 +10,11 @@ package com.example.androidprototypeapp;
 public final class R {
     public static final class anim {
         public static final int anim_fade_in=0x7f040000;
-        public static final int anim_fade_out=0x7f040001;
-        public static final int translate_right=0x7f040002;
+        public static final int anim_fade_in_hide=0x7f040001;
+        public static final int anim_fade_in_translate_right=0x7f040002;
+        public static final int anim_fade_out=0x7f040003;
+        public static final int delayed_anim_fade_in=0x7f040004;
+        public static final int translate_right=0x7f040005;
     }
     public static final class attr {
     }
@@ -76,19 +79,21 @@ public final class R {
         /**  App Details 
          */
         public static final int app_name=0x7f060000;
-        public static final int central_heating=0x7f060005;
+        public static final int central_heating=0x7f060007;
         /**  Home Labels 
          */
-        public static final int light_switch=0x7f060004;
+        public static final int light_switch=0x7f060006;
         public static final int one=0x7f060003;
-        public static final int other_thing=0x7f060007;
-        public static final int title_activity_central_heating=0x7f06000a;
-        public static final int title_activity_light_switch=0x7f060009;
+        public static final int other_thing=0x7f060009;
+        public static final int three=0x7f060005;
+        public static final int title_activity_central_heating=0x7f06000c;
+        public static final int title_activity_light_switch=0x7f06000b;
         /**  Page Titles 
          */
-        public static final int title_activity_main=0x7f060008;
-        public static final int title_activity_television=0x7f06000b;
-        public static final int tv=0x7f060006;
+        public static final int title_activity_main=0x7f06000a;
+        public static final int title_activity_television=0x7f06000d;
+        public static final int tv=0x7f060008;
+        public static final int two=0x7f060004;
         /**  Constants 
          */
         public static final int zero=0x7f060002;

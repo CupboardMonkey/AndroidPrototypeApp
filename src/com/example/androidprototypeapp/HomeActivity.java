@@ -36,6 +36,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 
@@ -63,7 +64,8 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		@Override
 		public void handleMessage(Message msg) {
 			Button ref = (Button) findViewById(R.id.refresh);
-			ref.setEnabled(true);	
+			ref.setEnabled(true);
+
 			if(BA.isDiscovering()) {
 				System.out.println("Would have cancelled");
 				//BA.cancelDiscovery();
@@ -77,7 +79,6 @@ public class HomeActivity extends Activity implements AnimationListener  {
 	ImageView c;
 	ImageView blank;
 	Boolean reset = false;
-	//MyApplication socketDetails;
 
 	private BluetoothAdapter BA;
 
@@ -86,16 +87,15 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		super.onCreate(savedInstanceState);
 		BA = BluetoothAdapter.getDefaultAdapter();
 
-		//if(!loaded) {
-		//loaded = true;
+		/*
+		//Introduction Version
 		setContentView(R.layout.logo_screen);
 		handler.sendMessageDelayed(new Message(), 2000);
-		//} else {
+		 */
 
-
-		//setContentView(R.layout.activity_main);
-
-		//}
+		//Simple Version
+		setContentView(R.layout.activity_main);
+		refresh();
 
 	}
 
@@ -118,118 +118,52 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 	public void appear(Button b) {
 
-		animFadeIn = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in);
-		animFadeIn.setAnimationListener(this);
-
-		moveRight = AnimationUtils.loadAnimation(this, R.anim.translate_right);
-		moveRight.setAnimationListener(this);
-
-		c = new ImageView(this);
-		c.setMinimumWidth(300);
-		c.setMinimumHeight(80);
-		c.setImageResource(R.drawable.scroll_cover);
-		c.setVisibility(View.VISIBLE);
-
-		blank = new ImageView(this);
-		blank.setMinimumWidth(300);
-		blank.setMinimumHeight(80);
-		blank.setImageResource(R.drawable.cover);
-		blank.setVisibility(View.VISIBLE);
-
-		//c = (ImageView)findViewById(R.id.cover);
-		//blank = (ImageView)findViewById(R.id.blank);
-
-		LinearLayout l = (LinearLayout)findViewById(R.id.home_page);
-
-		l.addView(b);
-		l.addView(c);
-		l.addView(blank);
-
-		System.out.println("l y = " + l.getY());
-
-		blank.setAlpha(1f);
-		b.setAlpha(1f);
-		c.setAlpha(1f);
-
-		blank.setX(10);
-		blank.setY(-80);
-
-		c.setX(10);
-		c.setY(-160);
-
-		System.out.println(blank.getX() + ", " + blank.getY());
-		System.out.println("l size:" + l.getChildCount());
-
-		blank.bringToFront();
-		c.bringToFront();
-
-
-		c.startAnimation(animFadeIn);
-		b.startAnimation(animFadeIn);
+		Animation anim = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in);
+		anim.setAnimationListener(this);
+		anim.setFillAfter(true);
+		b.startAnimation(anim);		
 
 	}
 
-	public void newButton(String name, final BluetoothSocket socket) {
-		ViewGroup linearLayout = (ViewGroup) findViewById(R.id.home_page);
+	public void delayedAppear(Button b) {
 
-		//Button button = (Button)getLayoutInflater().inflate(R.layout.button_light, null);
-		Button b = new Button(this);
-		b.setMinimumWidth(300);
-		b.setMinimumHeight(80);
-		b.setText(name);
-		b.setTextColor(Color.argb(255, 0, 162, 232));
-		//b.setBackgroundColor(Color.WHITE);
-		//b.setBackgroundResource(R.layout.button_light);
-		b.setAlpha(0f);
-		//linearLayout.addView(b, 300, 80);
-		//linearLayout.addView(b);
+		Animation anim = AnimationUtils.loadAnimation(this, R.anim.delayed_anim_fade_in);
+		anim.setAnimationListener(this);
+		anim.setFillAfter(true);
+		b.startAnimation(anim);		
 
-		b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.unknown, 0, R.drawable.blank, 0);
-		appear(b);
+	}
 
-		//linearLayout.addView(b);
-		System.out.println("New button");
-		Button.OnClickListener btnclick = new Button.OnClickListener(){
+	public void appearAndSlide(Button b) {
 
-			@Override
-			public void onClick(View v) {
-				v.playSoundEffect(SoundEffectConstants.CLICK);
-				InputStream inStream;
-				OutputStream outStream;
-				try {
+		Animation anim = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in_translate_right);
+		anim.setAnimationListener(this);
+		anim.setFillAfter(true);
 
-					System.out.println("here");
+		b.startAnimation(anim);		
 
-					outStream = socket.getOutputStream();
-					String message = "r";
-					byte[] toSend = message.getBytes();
-					outStream.write(toSend);
+	}	
 
-					inStream = socket.getInputStream();
-					int received = inStream.read();
-					System.out.println(received);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+	public void appearAndHide(Button b) {
 
+		Animation anim = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in_hide);
+		anim.setAnimationListener(this);
+		anim.setFillAfter(true);
 
-			}
+		b.startAnimation(anim);		
 
-		};
-
-
-		b.setOnClickListener(btnclick);
 	}
 
 	public void easynewButton(String name, final BluetoothSocket socket) {
 		Button b = new Button(this);
+		b.setAlpha(0f);
 		b.setMinimumWidth(300);
 		b.setMinimumHeight(80);
 		b.setText(name);
 		b.setTextColor(Color.argb(255, 0, 162, 232));
-		b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.light_off, 0, 0, 0);
 
+		
+		b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.light_off, 0, 0, 0);
 
 		Button.OnClickListener btnclick = new Button.OnClickListener(){
 
@@ -310,18 +244,40 @@ public class HomeActivity extends Activity implements AnimationListener  {
 				popup.show();//showing popup menu  
 			}  
 		};//closing the setOnClickListener method
+		
 		b1.setOnClickListener(popup);
 
 		ViewGroup layout = (ViewGroup) findViewById(R.id.home_page);
-		LinearLayout LL = new LinearLayout(this);
+		RelativeLayout LL = new RelativeLayout(this);
+		LL.setMinimumHeight(90);
+
+		b1.setX(310);
+
+		Button cover = new Button(this);
+		cover.setBackgroundResource(R.drawable.scroll_cover);
+		cover.setX(10);
+		cover.setHeight(80);
+
+		Button block = new Button(this);
+		block.setBackgroundColor(Color.BLACK);
+		block.setX(10);
+		block.setHeight(80);
+
+		b.setAlpha(1f);
+		appear(b);
+
+		appearAndSlide(cover);
+		appearAndHide(block);
+		delayedAppear(b1);
+
 		LL.addView(b);
 		LL.addView(b1);
+		LL.addView(block);
+		LL.addView(cover);		
 		layout.addView(LL);
-
 	}
 
 	public void easyTVButton(String name, final BluetoothDevice device) {
-		System.out.println("Making new button");
 		Button b = new Button(this);
 		b.setMinimumWidth(300);
 		b.setMinimumHeight(80);
@@ -333,15 +289,6 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 			@Override
 			public void onClick(View v) {
-
-				System.out.println("Making television jump");
-				//try {
-				//socket.close();
-				//} catch (IOException e) {
-				// TODO Auto-generated catch block
-				//	e.printStackTrace();
-				//}
-				//television(socket.getRemoteDevice().getAddress(), socket);
 				television(device.getAddress());
 			}
 
@@ -390,47 +337,9 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		layout.addView(LL);
 	}
 
-
-	//public void phase (View view) {
-	//		animFadeIn = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in);
-	//		animFadeIn.setAnimationListener(this);
-	//
-	//		moveRight = AnimationUtils.loadAnimation(this, R.anim.translate_right);
-	//		moveRight.setAnimationListener(this);
-	//
-	//		Button b = (Button)findViewById(R.id.new_light);
-	//		c = (ImageView)findViewById(R.id.cover);
-	//		blank = (ImageView)findViewById(R.id.blank);
-	//
-	//		blank.setAlpha(1f);
-	//		b.setAlpha(1f);
-	//		c.setAlpha(1f);
-	//
-	//		blank.bringToFront();
-	//		c.bringToFront();
-	//
-	//		blank.setX(b.getX()+10);
-	//		blank.setY(b.getY());
-	//		blank.setAlpha(1f);
-	//
-	//
-	//		c.setX(b.getX()+10);
-	//		c.setY(b.getY());
-	//
-	//		c.startAnimation(animFadeIn);
-	//		b.startAnimation(animFadeIn);
-	//	}
-
 	@Override
 	public void onAnimationEnd(Animation animation) {
-		if (animation == animFadeIn) {
-			blank.setAlpha(0f);
-			c.startAnimation(moveRight);
-		}
-
-		if (animation == moveRight) {
-			c.setAlpha(0f);
-		}
+		
 	}
 
 	@Override
@@ -461,6 +370,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 				,Toast.LENGTH_SHORT).show();
 
 		BA.startDiscovery();
+
 		discoverHandler.sendMessageDelayed(new Message(), 12000);
 
 		BroadcastReceiver BR = new BroadcastReceiver() {
@@ -476,16 +386,14 @@ public class HomeActivity extends Activity implements AnimationListener  {
 					BluetoothSocket tmp = null;
 					mmDevice = device;
 
-					if(mmDevice.getName().startsWith("MagMob")) {
+					if(mmDevice.getName().equals("MagMobIA")) {
 						if(!storedDevices.contains(mmDevice.getAddress())) {
 							storedDevices.add(mmDevice.getAddress());
 							// Get a BluetoothSocket to connect with the given BluetoothDevice
-							/*
+
 							try {
 								// MY_UUID is the app's UUID string, also used by the server code
-								System.out.println("Tmp making");
 								tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
-								System.out.println("Tmp made");
 
 								//tempDevice = device;
 							} catch (IOException e) { }
@@ -502,7 +410,23 @@ public class HomeActivity extends Activity implements AnimationListener  {
 									mmSocket.close();
 								} catch (IOException closeException) { }
 							}
-*/
+
+							if(!reset) {
+								reset = true;
+								devices.clear();
+								storedDevices.clear();
+								LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
+								l.removeAllViews();
+							}
+
+							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+							String name = settings.getString(device.getAddress(), "Unknown Device");
+							easynewButton(name, mmSocket);
+						}						
+					} else if(mmDevice.getName().equals("MagMobTA")) {
+						if(!storedDevices.contains(mmDevice.getAddress())) {
+							storedDevices.add(mmDevice.getAddress());
+
 							if(!reset) {
 								reset = true;
 								devices.clear();
@@ -514,16 +438,9 @@ public class HomeActivity extends Activity implements AnimationListener  {
 							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 							String name = settings.getString(device.getAddress(), "Unknown Device");
 
+							easyTVButton(name, mmDevice);
 
-							if(mmDevice.getName().equals("MagMobIA")) {
-								easynewButton(name, mmSocket);
-							} else if(mmDevice.getName().equals("MagMobTA")) {
-								easyTVButton(name, mmDevice);
-							}
-						} else {
-							System.out.println("ALREADY IN");
-						}
-						
+						}						
 					} 
 				}
 			}
