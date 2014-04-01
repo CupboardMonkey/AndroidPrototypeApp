@@ -5,10 +5,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.UUID;
-
-import com.google.gson.Gson;
-
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -26,7 +22,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -66,11 +61,6 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		public void handleMessage(Message msg) {
 			Button ref = (Button) findViewById(R.id.refresh);
 			ref.setEnabled(true);
-
-			if(BA.isDiscovering()) {
-				System.out.println("Would have cancelled");
-				//BA.cancelDiscovery();
-			}
 		}
 	};
 
@@ -110,236 +100,32 @@ public class HomeActivity extends Activity implements AnimationListener  {
 	public void television(String address) {
 		Intent intent = new Intent(this, TelevisionActivity.class);
 		intent.putExtra("Address", address);
-		System.out.println("Intent has address");
-		//intent.putExtra("Socket", objectToString(sock));
-
-		//System.out.println("Intent has sock");
 		startActivity(intent);
 	}
 
 	public void appear(Button b) {
-
 		Animation anim = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in);
 		anim.setAnimationListener(this);
-		//anim.setFillAfter(true);
 		b.startAnimation(anim);		
-
 	}
-
+	
 	public void delayedAppear(Button b) {
-
 		Animation anim = AnimationUtils.loadAnimation(this, R.anim.delayed_anim_fade_in);
 		anim.setAnimationListener(this);
-		//anim.setFillAfter(true);
 		b.startAnimation(anim);		
-
 	}
 
 	public void appearAndSlide(Button b) {
-
 		Animation anim = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in_translate_right);
 		anim.setAnimationListener(this);
-		//anim.setFillAfter(true);
-
 		b.startAnimation(anim);		
-
 	}	
 
 	public void appearAndHide(Button b) {
-
 		Animation anim = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in_hide);
 		anim.setAnimationListener(this);
-		//anim.setFillAfter(true);
-
 		b.startAnimation(anim);		
-
 	}
-
-	/*
-	public void easynewButton(String name, final BluetoothSocket socket) {
-		Button b = new Button(this);
-		b.setAlpha(0f);
-		b.setMinimumWidth(300);
-		b.setMinimumHeight(80);
-		b.setText(name);
-		b.setTextColor(Color.argb(255, 0, 162, 232));
-
-
-		b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.light_off, 0, 0, 0);
-
-		Button.OnClickListener btnclick = new Button.OnClickListener(){
-
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				//v.playSoundEffect(SoundEffectConstants.CLICK);
-				InputStream inStream;
-				OutputStream outStream;
-				try {
-
-					System.out.println("here");
-
-					outStream = socket.getOutputStream();
-					String message = "r";
-					byte[] toSend = message.getBytes();
-					outStream.write(toSend);
-
-					inStream = socket.getInputStream();
-
-					byte byt[] = new byte[1];
-					int received = inStream.read(byt, 0, 1);
-					inStream.read();
-					inStream.read();
-					if(received == 1) {
-
-						if(((int)byt[0] & 0xff) == '0') {
-							message = "1";
-							toSend = message.getBytes();
-							outStream.write(toSend);
-						} else if(((int)byt[0] & 0xff) == '1') {
-							message = "0";
-							toSend = message.getBytes();
-							outStream.write(toSend);
-						}
-						System.out.println("Changed from " + ((int)byt[0] & 0xff));
-					}
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
-
-			}
-
-		};
-
-
-		b.setOnClickListener(btnclick);
-		final Button b1 = new Button(this);
-
-		b1.setHeight(60);
-		b1.setWidth(60);
-		b1.setBackgroundResource(R.drawable.settings);
-		b1.setTextColor(Color.argb(255, 0, 162, 232));
-		b1.setTag(R.string.zero, socket.getRemoteDevice().getAddress());
-		b1.setTag(R.string.one, b);
-		Button.OnClickListener popup = new Button.OnClickListener() {  
-
-			@Override  
-			public void onClick(final View v) {  
-				//Creating the instance of PopupMenu  
-				PopupMenu popup = new PopupMenu(getApplicationContext(), b1);  
-				//Inflating the Popup using xml file  
-				popup.getMenuInflater().inflate(R.menu.device_options, popup.getMenu());  
-
-				//registering popup with OnMenuItemClickListener  
-				popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
-					public boolean onMenuItemClick(MenuItem item) {  
-						if(item.getTitle().equals("Rename")) {
-							rename(v.getTag(R.string.zero), v.getTag(R.string.one));
-						}
-						//Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(),Toast.LENGTH_SHORT).show();  
-						return true;  
-					}  
-				});  
-
-				popup.show();//showing popup menu  
-			}  
-		};//closing the setOnClickListener method
-
-		b1.setOnClickListener(popup);
-
-		ViewGroup layout = (ViewGroup) findViewById(R.id.home_page);
-		RelativeLayout LL = new RelativeLayout(this);
-		LL.setMinimumHeight(90);
-
-		b1.setX(310);
-
-		Button cover = new Button(this);
-		cover.setBackgroundResource(R.drawable.scroll_cover);
-		cover.setX(10);
-		cover.setHeight(80);
-
-		Button block = new Button(this);
-		block.setBackgroundColor(Color.BLACK);
-		block.setX(10);
-		block.setHeight(80);
-
-		b.setAlpha(1f);
-		appear(b);
-
-		appearAndSlide(cover);
-		appearAndHide(block);
-		delayedAppear(b1);
-
-		LL.addView(b);
-		LL.addView(b1);
-		LL.addView(block);
-		LL.addView(cover);		
-		layout.addView(LL);
-	}
-
-
-	public void easyTVButton(String name, final BluetoothDevice device) {
-		Button b = new Button(this);
-		b.setMinimumWidth(300);
-		b.setMinimumHeight(80);
-		b.setText(name);
-		b.setTextColor(Color.argb(255, 0, 162, 232));
-		b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.tv_icon, 0, 0, 0);
-
-		Button.OnClickListener btnclick = new Button.OnClickListener(){
-
-			@Override
-			public void onClick(View v) {
-				television(device.getAddress());
-			}
-
-		};
-
-
-		b.setOnClickListener(btnclick);
-
-		final Button b1 = new Button(this);
-
-		b1.setHeight(60);
-		b1.setWidth(60);
-		b1.setBackgroundResource(R.drawable.settings);
-		b1.setTextColor(Color.argb(255, 0, 162, 232));
-		b1.setTag(R.string.zero, device.getAddress());
-		b1.setTag(R.string.one, b);
-		Button.OnClickListener popup = new Button.OnClickListener() {  
-
-			@Override  
-			public void onClick(final View v) {  
-				//Creating the instance of PopupMenu  
-				PopupMenu popup = new PopupMenu(getApplicationContext(), b1);  
-				//Inflating the Popup using xml file  
-				popup.getMenuInflater().inflate(R.menu.device_options, popup.getMenu());  
-
-				//registering popup with OnMenuItemClickListener  
-				popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
-					public boolean onMenuItemClick(MenuItem item) {  
-						if(item.getTitle().equals("Rename")) {
-							rename(v.getTag(R.string.zero), v.getTag(R.string.one));
-						}
-						//Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(),Toast.LENGTH_SHORT).show();  
-						return true;  
-					}  
-				});  
-
-				popup.show();//showing popup menu  
-			}  
-		};//closing the setOnClickListener method
-		b1.setOnClickListener(popup);
-
-		ViewGroup layout = (ViewGroup) findViewById(R.id.home_page);
-		LinearLayout LL = new LinearLayout(this);
-		LL.addView(b);
-		LL.addView(b1);
-		layout.addView(LL);
-	}
-	 */
 
 	public void createButton(String name, final BluetoothDevice device, final BluetoothSocket socket, String mode) {
 		Button b = new Button(this);
@@ -350,37 +136,28 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		b.setTextColor(Color.argb(255, 0, 162, 232));
 
 		Button.OnClickListener btnclick = null;
-		System.out.println("Before: " + btnclick);
-
 		if(mode.equals("IA")) {
 
 			b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.light_off, 0, 0, 0);
-
-			System.out.println("Setting IA btn");
 			btnclick = new Button.OnClickListener(){
 				@Override
 				public void onClick(View v) {
-					// TODO Auto-generated method stub
-					//v.playSoundEffect(SoundEffectConstants.CLICK);
 					InputStream inStream;
 					OutputStream outStream;
 					try {
-
-						System.out.println("here");
-
 						outStream = socket.getOutputStream();
 						String message = "r";
+						
 						byte[] toSend = message.getBytes();
 						outStream.write(toSend);
-
 						inStream = socket.getInputStream();
-
+						
 						byte byt[] = new byte[1];
 						int received = inStream.read(byt, 0, 1);
 						inStream.read();
 						inStream.read();
+						
 						if(received == 1) {
-
 							if(((int)byt[0] & 0xff) == '0') {
 								message = "1";
 								toSend = message.getBytes();
@@ -390,35 +167,23 @@ public class HomeActivity extends Activity implements AnimationListener  {
 								toSend = message.getBytes();
 								outStream.write(toSend);
 							}
-							System.out.println("Changed from " + ((int)byt[0] & 0xff));
 						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-
-
 				}
-
 			};
-			System.out.println("Set IA btn");
-
 		} else if(mode.equals("TA")) {
 			b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.tv_icon, 0, 0, 0);
-			System.out.println("Setting TA btn");
 			btnclick = new Button.OnClickListener(){
-
 				@Override
 				public void onClick(View v) {
 					television(device.getAddress());
 				}
-
 			};
-			System.out.println("Set TA btn");
-
 		}
-
-		System.out.println("After: " + btnclick);
+		
 		b.setOnClickListener(btnclick);
 
 		final Button b1 = new Button(this);
@@ -443,8 +208,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 					public boolean onMenuItemClick(MenuItem item) {  
 						if(item.getTitle().equals("Rename")) {
 							rename(v.getTag(R.string.zero), v.getTag(R.string.one));
-						}
-						//Toast.makeText(MainActivity.this,"You Clicked : " + item.getTitle(),Toast.LENGTH_SHORT).show();  
+						}  
 						return true;  
 					}  
 				});  
@@ -461,7 +225,6 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 		b1.setX(310);
 		b1.setY(10);
-
 
 		Button cover = new Button(this);
 		cover.setBackgroundResource(R.drawable.scroll_cover);
@@ -488,8 +251,6 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		LL.addView(block);
 		LL.addView(cover);		
 		layout.addView(LL);
-
-		//LL.removeView(block);
 	}
 
 	@Override
@@ -545,12 +306,9 @@ public class HomeActivity extends Activity implements AnimationListener  {
 						if(!storedDevices.contains(mmDevice.getAddress())) {
 							storedDevices.add(mmDevice.getAddress());
 							// Get a BluetoothSocket to connect with the given BluetoothDevice
-
 							try {
 								// MY_UUID is the app's UUID string, also used by the server code
 								tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
-
-								//tempDevice = device;
 							} catch (IOException e) { }
 							mmSocket = tmp;
 							System.out.println(mmSocket);
@@ -576,7 +334,6 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 							String name = settings.getString(device.getAddress(), "Unknown Device");
-							//easynewButton(name, mmSocket);
 							createButton(name, device, mmSocket, "IA");
 						}						
 					} else if(mmDevice.getName().equals("MagMobTA")) {
@@ -595,8 +352,6 @@ public class HomeActivity extends Activity implements AnimationListener  {
 							String name = settings.getString(device.getAddress(), "Unknown Device");
 
 							createButton(name, mmDevice, null, "TA");
-							//easyTVButton(name, mmDevice);
-
 						}						
 					} 
 				}
@@ -637,12 +392,8 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
-
-				//Toast.makeText(getBaseContext(),"Did something: " + input.getText(),Toast.LENGTH_LONG).show();
 				b.setText(input.getText().toString());
-
 				renamePreference(address, input.getText().toString());
-
 			}
 		});
 
@@ -655,25 +406,11 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		alert.show();
 	}
 
-	public String objectToString(Object o) {
-		System.out.println("New gson");
-		Gson gson = new Gson();
-		System.out.println("json = gson to json");
-		String json = gson.toJson(o);
-		System.out.println("json: " + json);
-		return json;
-
-	}
-
 	private Handler deleteObj = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
 			View o = (View) msg.obj;
-			//ViewGroup layout = (ViewGroup) findViewById(R.id.home_page);
-			//layout.removeView(o);
-
 			o.setVisibility(View.GONE);
-
 		}
 	};
 
@@ -681,7 +418,6 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		Message m = new Message();
 		m.obj = obj;
 		deleteObj.sendMessageDelayed(m, time);
-
 	}
 
 }
