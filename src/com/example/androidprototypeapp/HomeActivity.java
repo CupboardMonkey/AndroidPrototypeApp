@@ -127,7 +127,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		b.startAnimation(anim);		
 	}
 
-	public void createButton(String name, final BluetoothDevice device, final BluetoothSocket socket, String mode) {
+	public void createButton(String name, final BluetoothDevice device, final BluetoothSocket socket, String mode, Boolean prox) {
 		Button b = new Button(this);
 		b.setAlpha(0f);
 		b.setMinimumWidth(300);
@@ -137,13 +137,25 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 		Button.OnClickListener btnclick = null;
 		if(mode.equals("IA")) {
-
+			if(prox) {
+				OutputStream outStream;
+				try {
+					outStream = socket.getOutputStream();
+					String message = "1";
+					byte[] toSend = message.getBytes();
+					outStream.write(toSend);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
 			b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.light_off, 0, 0, 0);
 			btnclick = new Button.OnClickListener(){
 				@Override
 				public void onClick(View v) {
 					InputStream inStream;
-					OutputStream outStream;
+					OutputStream outStream;	
 					try {
 						outStream = socket.getOutputStream();
 						String message = "r";
@@ -194,29 +206,66 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		b1.setTextColor(Color.argb(255, 0, 162, 232));
 		b1.setTag(R.string.zero, device.getAddress());
 		b1.setTag(R.string.one, b);
-		Button.OnClickListener popup = new Button.OnClickListener() {  
+		
+		
+		Button.OnClickListener popup = null;
+		
+		if(mode.equals("TA")) {
+			
+			popup = new Button.OnClickListener() {  
 
-			@Override  
-			public void onClick(final View v) {  
-				//Creating the instance of PopupMenu  
-				PopupMenu popup = new PopupMenu(getApplicationContext(), b1);  
-				//Inflating the Popup using xml file  
-				popup.getMenuInflater().inflate(R.menu.device_options, popup.getMenu());  
-
-				//registering popup with OnMenuItemClickListener  
-				popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
-					public boolean onMenuItemClick(MenuItem item) {  
-						if(item.getTitle().equals("Rename")) {
-							rename(v.getTag(R.string.zero), v.getTag(R.string.one));
+				@Override  
+				public void onClick(final View v) {  
+					PopupMenu popup = new PopupMenu(getApplicationContext(), b1);
+					popup.getMenuInflater().inflate(R.menu.device_options, popup.getMenu());  
+	  
+					popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
+						public boolean onMenuItemClick(MenuItem item) {  
+							if(item.getTitle().equals("Rename")) {
+								rename(v.getTag(R.string.zero), v.getTag(R.string.one));
+							}  
+							return true;  
 						}  
-						return true;  
-					}  
-				});  
+					});  
 
-				popup.show();//showing popup menu  
-			}  
-		};//closing the setOnClickListener method
+					popup.show();  
+				}  
+			};
+		} else if (mode.equals("IA")) {
+			
+			popup = new Button.OnClickListener() {  
 
+				@Override  
+				public void onClick(final View v) {  
+					PopupMenu popup = new PopupMenu(getApplicationContext(), b1);
+					popup.getMenuInflater().inflate(R.menu.ia_device_options, popup.getMenu());  
+	  
+					popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
+						public boolean onMenuItemClick(MenuItem item) {  
+							if(item.getTitle().equals("Rename")) {
+								rename(v.getTag(R.string.zero), v.getTag(R.string.one));
+							}
+							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+							SharedPreferences.Editor editor = settings.edit();
+
+							
+							if(item.getTitle().equals("Activate on proximity")) {
+								editor.putBoolean(device.getAddress()+"prox", true);
+								editor.commit();
+							}  
+							if(item.getTitle().equals("Do not activate on proximity")) {
+								editor.putBoolean(device.getAddress()+"prox", false);
+								editor.commit();
+							}  
+							
+							return true;  
+						}  
+					});  
+
+					popup.show();  
+				}  
+			};
+		}
 		b1.setOnClickListener(popup);
 
 		ViewGroup layout = (ViewGroup) findViewById(R.id.home_page);
@@ -303,15 +352,17 @@ public class HomeActivity extends Activity implements AnimationListener  {
 					mmDevice = device;
 
 					if(mmDevice.getName().equals("MagMobIA")) {
+						
+						//Potentially this line and next can be removed
 						if(!storedDevices.contains(mmDevice.getAddress())) {
 							storedDevices.add(mmDevice.getAddress());
+							
 							// Get a BluetoothSocket to connect with the given BluetoothDevice
 							try {
 								// MY_UUID is the app's UUID string, also used by the server code
 								tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
 							} catch (IOException e) { }
 							mmSocket = tmp;
-							System.out.println(mmSocket);
 							try {
 								//Connect the device through the socket. This will block
 								//until it succeeds or throws an exception
@@ -324,6 +375,8 @@ public class HomeActivity extends Activity implements AnimationListener  {
 								} catch (IOException closeException) { }
 							}
 
+							
+							
 							if(!reset) {
 								reset = true;
 								devices.clear();
@@ -333,8 +386,11 @@ public class HomeActivity extends Activity implements AnimationListener  {
 							}
 
 							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+							
+							Boolean prox = settings.getBoolean(device.getAddress()+"prox", false);
+							System.out.println("Prox: " + prox);
 							String name = settings.getString(device.getAddress(), "Unknown Device");
-							createButton(name, device, mmSocket, "IA");
+							createButton(name, device, mmSocket, "IA", prox);
 						}						
 					} else if(mmDevice.getName().equals("MagMobTA")) {
 						if(!storedDevices.contains(mmDevice.getAddress())) {
@@ -351,12 +407,11 @@ public class HomeActivity extends Activity implements AnimationListener  {
 							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 							String name = settings.getString(device.getAddress(), "Unknown Device");
 
-							createButton(name, mmDevice, null, "TA");
+							createButton(name, mmDevice, null, "TA", false);
 						}						
 					} 
 				}
 			}
-
 		};
 
 		IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND); 
