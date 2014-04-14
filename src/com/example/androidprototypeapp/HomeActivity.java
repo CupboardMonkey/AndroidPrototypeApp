@@ -3,8 +3,11 @@ package com.example.androidprototypeapp;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.UUID;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -43,8 +46,8 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 	BluetoothDevice mmDevice;
 	BluetoothSocket mmSocket;
-	ArrayList<BTConnection> devices = new ArrayList<BTConnection>();
 	ArrayList<String> storedDevices = new ArrayList<String>();
+	ArrayList<BluetoothSocket> deviceSockets = new ArrayList<BluetoothSocket>();
 
 	private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
@@ -108,7 +111,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		anim.setAnimationListener(this);
 		b.startAnimation(anim);		
 	}
-	
+
 	public void delayedAppear(Button b) {
 		Animation anim = AnimationUtils.loadAnimation(this, R.anim.delayed_anim_fade_in);
 		anim.setAnimationListener(this);
@@ -149,7 +152,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 					e.printStackTrace();
 				}
 			}
-			
+
 			b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.light_off, 0, 0, 0);
 			btnclick = new Button.OnClickListener(){
 				@Override
@@ -159,16 +162,16 @@ public class HomeActivity extends Activity implements AnimationListener  {
 					try {
 						outStream = socket.getOutputStream();
 						String message = "r";
-						
+
 						byte[] toSend = message.getBytes();
 						outStream.write(toSend);
 						inStream = socket.getInputStream();
-						
+
 						byte byt[] = new byte[1];
 						int received = inStream.read(byt, 0, 1);
 						inStream.read();
 						inStream.read();
-						
+
 						if(received == 1) {
 							if(((int)byt[0] & 0xff) == '0') {
 								message = "1";
@@ -195,7 +198,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 				}
 			};
 		}
-		
+
 		b.setOnClickListener(btnclick);
 
 		final Button b1 = new Button(this);
@@ -206,19 +209,19 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		b1.setTextColor(Color.argb(255, 0, 162, 232));
 		b1.setTag(R.string.zero, device.getAddress());
 		b1.setTag(R.string.one, b);
-		
-		
+
+
 		Button.OnClickListener popup = null;
-		
+
 		if(mode.equals("TA")) {
-			
+
 			popup = new Button.OnClickListener() {  
 
 				@Override  
 				public void onClick(final View v) {  
 					PopupMenu popup = new PopupMenu(getApplicationContext(), b1);
 					popup.getMenuInflater().inflate(R.menu.device_options, popup.getMenu());  
-	  
+
 					popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
 						public boolean onMenuItemClick(MenuItem item) {  
 							if(item.getTitle().equals("Rename")) {
@@ -232,14 +235,14 @@ public class HomeActivity extends Activity implements AnimationListener  {
 				}  
 			};
 		} else if (mode.equals("IA")) {
-			
+
 			popup = new Button.OnClickListener() {  
 
 				@Override  
 				public void onClick(final View v) {  
 					PopupMenu popup = new PopupMenu(getApplicationContext(), b1);
 					popup.getMenuInflater().inflate(R.menu.ia_device_options, popup.getMenu());  
-	  
+
 					popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
 						public boolean onMenuItemClick(MenuItem item) {  
 							if(item.getTitle().equals("Rename")) {
@@ -248,7 +251,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 							SharedPreferences.Editor editor = settings.edit();
 
-							
+
 							if(item.getTitle().equals("Activate on proximity")) {
 								editor.putBoolean(device.getAddress()+"prox", true);
 								editor.commit();
@@ -257,7 +260,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 								editor.putBoolean(device.getAddress()+"prox", false);
 								editor.commit();
 							}  
-							
+
 							return true;  
 						}  
 					});  
@@ -323,16 +326,34 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		refresh();
 	}
 
+	@SuppressLint("NewApi")
 	public void refresh() {
 
 		Button ref = (Button) findViewById(R.id.refresh);
 		ref.setEnabled(false);
 		reset = false;
+		
+		LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
+		l.removeAllViews();
+		for(int i = 0; i < storedDevices.size(); i++) {
+			BluetoothDevice temp = BA.getRemoteDevice(storedDevices.get(i));
+			if(temp.getName().equals("MagMobIA")) {
+				try {
+					deviceSockets.get(i).close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		storedDevices.clear();
+		deviceSockets.clear();
+		
 		if(BA.isDiscovering()) {
 			BA.cancelDiscovery();
 		}
 		Toast.makeText(getApplicationContext(),"Refresh" 
-				,Toast.LENGTH_SHORT).show();
+				,Toast.LENGTH_LONG).show();
 
 		BA.startDiscovery();
 
@@ -343,20 +364,22 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 				String action = intent.getAction();
 
+				System.out.println("Action: " + action);
+				
 				if (BluetoothDevice.ACTION_FOUND.equals(action)) 
 				{
 					// Get the BluetoothDevice object from the Intent
 					BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+					System.out.println(device.getAddress());
 
 					BluetoothSocket tmp = null;
 					mmDevice = device;
 
 					if(mmDevice.getName().equals("MagMobIA")) {
-						
-						//Potentially this line and next can be removed
+
 						if(!storedDevices.contains(mmDevice.getAddress())) {
 							storedDevices.add(mmDevice.getAddress());
-							
+
 							// Get a BluetoothSocket to connect with the given BluetoothDevice
 							try {
 								// MY_UUID is the app's UUID string, also used by the server code
@@ -375,40 +398,42 @@ public class HomeActivity extends Activity implements AnimationListener  {
 								} catch (IOException closeException) { }
 							}
 
-							
-							
-							if(!reset) {
-								reset = true;
-								devices.clear();
-								storedDevices.clear();
-								LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
-								l.removeAllViews();
-							}
+
+
+							//							if(!reset) {
+							//								reset = true;
+							//								storedDevices.clear();
+							//								storedDevices.add(mmDevice.getAddress());
+							//								LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
+							//								l.removeAllViews();
+							//							}
 
 							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-							
+
 							Boolean prox = settings.getBoolean(device.getAddress()+"prox", false);
 							System.out.println("Prox: " + prox);
 							String name = settings.getString(device.getAddress(), "Unknown Device");
+deviceSockets.add(mmSocket);
 							createButton(name, device, mmSocket, "IA", prox);
-						}						
+
+						}
 					} else if(mmDevice.getName().equals("MagMobTA")) {
 						if(!storedDevices.contains(mmDevice.getAddress())) {
 							storedDevices.add(mmDevice.getAddress());
 
-							if(!reset) {
-								reset = true;
-								devices.clear();
-								storedDevices.clear();
-								LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
-								l.removeAllViews();
-							}
+							//							if(!reset) {
+							//								reset = true;
+							//								storedDevices.clear();
+							//								storedDevices.add(mmDevice.getAddress());
+							//								LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
+							//								l.removeAllViews();
+							//							}
 
 							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 							String name = settings.getString(device.getAddress(), "Unknown Device");
-
+							deviceSockets.add(null);
 							createButton(name, mmDevice, null, "TA", false);
-						}						
+						}
 					} 
 				}
 			}
@@ -417,6 +442,8 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND); 
 		registerReceiver(BR, filter);
 
+
+		
 	}
 
 	public void renamePreference(String key, String text) {
