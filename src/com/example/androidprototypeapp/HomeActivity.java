@@ -10,6 +10,7 @@ import java.util.UUID;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -21,6 +22,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.view.Menu;
@@ -35,7 +37,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -63,7 +67,18 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		@Override
 		public void handleMessage(Message msg) {
 			Button ref = (Button) findViewById(R.id.refresh);
+			ref.setBackgroundResource(R.drawable.refresh);
 			ref.setEnabled(true);
+			if(storedDevices.size() == 0) {
+				LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
+				l.removeAllViews();
+
+				TextView t = new TextView(getBaseContext());
+				t.setTextSize(20);
+				t.setTextColor(Color.argb(255, 0, 162, 232));
+				t.setText("There were no found devices. Try refreshing by pressing the button in the top-right corner");
+				l.addView(t);				
+			}
 		}
 	};
 
@@ -332,8 +347,10 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		Button ref = (Button) findViewById(R.id.refresh);
 		ref.setEnabled(false);
 		reset = false;
-		
-		LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
+
+		ref.setBackgroundResource(R.drawable.refreshing);
+
+		final LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
 		l.removeAllViews();
 		for(int i = 0; i < storedDevices.size(); i++) {
 			BluetoothDevice temp = BA.getRemoteDevice(storedDevices.get(i));
@@ -348,12 +365,10 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		}
 		storedDevices.clear();
 		deviceSockets.clear();
-		
+
 		if(BA.isDiscovering()) {
 			BA.cancelDiscovery();
 		}
-		Toast.makeText(getApplicationContext(),"Refresh" 
-				,Toast.LENGTH_LONG).show();
 
 		BA.startDiscovery();
 
@@ -365,7 +380,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 				String action = intent.getAction();
 
 				System.out.println("Action: " + action);
-				
+
 				if (BluetoothDevice.ACTION_FOUND.equals(action)) 
 				{
 					// Get the BluetoothDevice object from the Intent
@@ -378,6 +393,9 @@ public class HomeActivity extends Activity implements AnimationListener  {
 					if(mmDevice.getName().equals("MagMobIA")) {
 
 						if(!storedDevices.contains(mmDevice.getAddress())) {
+							if(storedDevices.size() == 0) {
+								l.removeAllViews();
+							}
 							storedDevices.add(mmDevice.getAddress());
 
 							// Get a BluetoothSocket to connect with the given BluetoothDevice
@@ -398,37 +416,21 @@ public class HomeActivity extends Activity implements AnimationListener  {
 								} catch (IOException closeException) { }
 							}
 
-
-
-							//							if(!reset) {
-							//								reset = true;
-							//								storedDevices.clear();
-							//								storedDevices.add(mmDevice.getAddress());
-							//								LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
-							//								l.removeAllViews();
-							//							}
-
 							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 
 							Boolean prox = settings.getBoolean(device.getAddress()+"prox", false);
 							System.out.println("Prox: " + prox);
 							String name = settings.getString(device.getAddress(), "Unknown Device");
-deviceSockets.add(mmSocket);
+							deviceSockets.add(mmSocket);
 							createButton(name, device, mmSocket, "IA", prox);
 
 						}
 					} else if(mmDevice.getName().equals("MagMobTA")) {
 						if(!storedDevices.contains(mmDevice.getAddress())) {
+							if(storedDevices.size() == 0) {
+								l.removeAllViews();
+							}
 							storedDevices.add(mmDevice.getAddress());
-
-							//							if(!reset) {
-							//								reset = true;
-							//								storedDevices.clear();
-							//								storedDevices.add(mmDevice.getAddress());
-							//								LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
-							//								l.removeAllViews();
-							//							}
-
 							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 							String name = settings.getString(device.getAddress(), "Unknown Device");
 							deviceSockets.add(null);
@@ -439,11 +441,17 @@ deviceSockets.add(mmSocket);
 			}
 		};
 
+		if(storedDevices.size() == 0) {
+			TextView t = new TextView(this);
+			t.setTextSize(20);
+			t.setTextColor(Color.argb(255, 0, 162, 232));
+			t.setText("Refreshing");
+			l.addView(t);
+		}
+
 		IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND); 
 		registerReceiver(BR, filter);
 
-
-		
 	}
 
 	public void renamePreference(String key, String text) {

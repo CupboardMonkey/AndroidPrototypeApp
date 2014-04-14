@@ -47,10 +47,11 @@ public final class R {
         public static final int light_on=0x7f02000a;
         public static final int logo=0x7f02000b;
         public static final int refresh=0x7f02000c;
-        public static final int scroll_cover=0x7f02000d;
-        public static final int settings=0x7f02000e;
-        public static final int tv_icon=0x7f02000f;
-        public static final int unknown=0x7f020010;
+        public static final int refreshing=0x7f02000d;
+        public static final int scroll_cover=0x7f02000e;
+        public static final int settings=0x7f02000f;
+        public static final int tv_icon=0x7f020010;
+        public static final int unknown=0x7f020011;
     }
     public static final class id {
         public static final int action_settings=0x7f0a0005;

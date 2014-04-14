@@ -25,6 +25,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class TelevisionActivity extends Activity {
@@ -40,17 +41,19 @@ public class TelevisionActivity extends Activity {
 	ArrayList<Integer> channelCode;
 	ArrayList<ChannelData> signals = new ArrayList<ChannelData>();
 	BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
-	int idCounter = 0;
+	int idCounter;
 
 	@SuppressLint("NewApi")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
+		
 		setContentView(R.layout.activity_television);
 		Intent intenty = getIntent();
 		String address = intenty.getStringExtra("Address");
 		getDetails(address);		
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		idCounter = settings.getInt(device.getAddress()+"id", 0);
 		loadSavedButtons();
 	}
 
@@ -154,22 +157,36 @@ public class TelevisionActivity extends Activity {
 
 	public void loadButtons() {
 
+		ViewGroup layout = (ViewGroup) findViewById(R.id.remote);
+		layout.removeAllViews();
 		if(signals.size() > 0) {
-			ViewGroup layout = (ViewGroup) findViewById(R.id.remote);
-			layout.removeAllViews();
 			for (int i = 0; i < signals.size(); i++) {
+				System.out.println(signals.get(i).getId() + " " + signals.get(i).getLabel());
 				create(signals.get(i));
 			}
-			saveButtons();
-		}	
+		} else {
+			TextView t = new TextView(this);
+			t.setTextSize(20);
+			t.setTextColor(Color.argb(255, 0, 162, 232));
+			t.setText("There are no stored commands. Try adding one by pressing the button in the top-right corner");
+			layout.addView(t);
+		}
+		saveButtons();
 	}
 
 	public void newCreate(View view) {
 		ChannelData temp = new ChannelData(idCounter,new ArrayList<Integer>(),"Unnamed");
+
+		idCounter++;
+		
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		SharedPreferences.Editor editor = settings.edit();
+		editor.putInt(device.getAddress()+"id", idCounter);
+		editor.commit();
 		signals.add(temp);
 		create(temp);
-		idCounter++;
 		saveButtons();
+		loadButtons();
 	}
 
 	public void create(final ChannelData cd) {
@@ -329,7 +346,6 @@ public class TelevisionActivity extends Activity {
 	}
 
 	public void saveButtons() {
-		if(signals.size() > 0) {
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 			SharedPreferences.Editor editor = settings.edit();
 
@@ -339,7 +355,6 @@ public class TelevisionActivity extends Activity {
 			for (int i = 0; i < signals.size(); i++) {
 				saveObject(device.getAddress()+i, signals.get(i));
 			}
-		}
 	}
 
 	public void saveObject(String key, Object o) {
@@ -369,8 +384,8 @@ public class TelevisionActivity extends Activity {
 				ChannelData cd = getChannelData(add+i);
 				signals.add(cd);
 			}
-			loadButtons();
 		}
+		loadButtons();
 	}
 	
 	public void returnHome(View view) {
