@@ -17,6 +17,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,12 +43,13 @@ public class TelevisionActivity extends Activity {
 	ArrayList<ChannelData> signals = new ArrayList<ChannelData>();
 	BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
 	int idCounter;
+	int gotData = 0;
 
 	@SuppressLint("NewApi")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
 		setContentView(R.layout.activity_television);
 		Intent intenty = getIntent();
 		String address = intenty.getStringExtra("Address");
@@ -178,7 +180,7 @@ public class TelevisionActivity extends Activity {
 		ChannelData temp = new ChannelData(idCounter,new ArrayList<Integer>(),"Unnamed");
 
 		idCounter++;
-		
+
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		SharedPreferences.Editor editor = settings.edit();
 		editor.putInt(device.getAddress()+"id", idCounter);
@@ -249,7 +251,7 @@ public class TelevisionActivity extends Activity {
 				popup.show();  
 			}  
 		};
-		
+
 		b1.setOnClickListener(popup);
 		ViewGroup layout = (ViewGroup) findViewById(R.id.remote);
 		LinearLayout LL = new LinearLayout(this);
@@ -295,7 +297,7 @@ public class TelevisionActivity extends Activity {
 					// Cancelled.
 				}
 			});
-			
+
 			alert.show();
 
 
@@ -307,13 +309,22 @@ public class TelevisionActivity extends Activity {
 
 	public void record(int id) {
 		try {
-			ChannelData cd = getCDbyID(id);
+			final ChannelData cd = getCDbyID(id);
 			if(cd != null) {
 				String message = "0";
 				byte[] toSend = message.getBytes();
 				out.write(toSend);
-				cd.setCode(getArray(in));
-				loadButtons();
+
+
+				//if(in.available() > 0) {
+					cd.setCode(getArray(in));
+					loadButtons();
+
+				//} else {
+				//	System.out.println("Unavailable");
+				//}
+
+
 			} else {
 				Toast.makeText(getBaseContext(),"Cannot find data",Toast.LENGTH_LONG).show();
 			}
@@ -346,15 +357,15 @@ public class TelevisionActivity extends Activity {
 	}
 
 	public void saveButtons() {
-			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-			SharedPreferences.Editor editor = settings.edit();
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		SharedPreferences.Editor editor = settings.edit();
 
-			editor.putInt(device.getAddress()+"size", signals.size());
-			editor.commit();
+		editor.putInt(device.getAddress()+"size", signals.size());
+		editor.commit();
 
-			for (int i = 0; i < signals.size(); i++) {
-				saveObject(device.getAddress()+i, signals.get(i));
-			}
+		for (int i = 0; i < signals.size(); i++) {
+			saveObject(device.getAddress()+i, signals.get(i));
+		}
 	}
 
 	public void saveObject(String key, Object o) {
@@ -387,7 +398,7 @@ public class TelevisionActivity extends Activity {
 		}
 		loadButtons();
 	}
-	
+
 	public void returnHome(View view) {
 		this.finish();
 	}

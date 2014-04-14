@@ -24,6 +24,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -52,6 +53,9 @@ public class HomeActivity extends Activity implements AnimationListener  {
 	BluetoothSocket mmSocket;
 	ArrayList<String> storedDevices = new ArrayList<String>();
 	ArrayList<BluetoothSocket> deviceSockets = new ArrayList<BluetoothSocket>();
+	int gotData = 0;
+
+
 
 	private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
@@ -95,7 +99,6 @@ public class HomeActivity extends Activity implements AnimationListener  {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		BA = BluetoothAdapter.getDefaultAdapter();
-
 		/*
 		//Introduction Version
 		setContentView(R.layout.logo_screen);
@@ -172,8 +175,8 @@ public class HomeActivity extends Activity implements AnimationListener  {
 			btnclick = new Button.OnClickListener(){
 				@Override
 				public void onClick(View v) {
-					InputStream inStream;
-					OutputStream outStream;	
+					final InputStream inStream;
+					final OutputStream outStream;	
 					try {
 						outStream = socket.getOutputStream();
 						String message = "r";
@@ -182,22 +185,53 @@ public class HomeActivity extends Activity implements AnimationListener  {
 						outStream.write(toSend);
 						inStream = socket.getInputStream();
 
-						byte byt[] = new byte[1];
-						int received = inStream.read(byt, 0, 1);
-						inStream.read();
-						inStream.read();
 
-						if(received == 1) {
-							if(((int)byt[0] & 0xff) == '0') {
-								message = "1";
-								toSend = message.getBytes();
-								outStream.write(toSend);
-							} else if(((int)byt[0] & 0xff) == '1') {
-								message = "0";
-								toSend = message.getBytes();
-								outStream.write(toSend);
+						gotData = 1;
+						Thread getInput = new Thread(new Runnable() {
+							@Override
+							public void run() {
+								try {
+									Thread.sleep(100);
+
+									byte byt[] = new byte[1];
+
+									if(inStream.available() > 0) {
+										int received = inStream.read(byt, 0, 1);
+										inStream.read();
+										inStream.read();
+
+										if(received == 1) {
+											if(((int)byt[0] & 0xff) == '0') {
+												String message = "1";
+												byte[] toSend = message.getBytes();
+												outStream.write(toSend);
+											} else if(((int)byt[0] & 0xff) == '1') {
+												String message = "0";
+												byte[] toSend = message.getBytes();
+												outStream.write(toSend);
+											}
+
+										} 
+										gotData = 2;
+									} else {
+										gotData = 0;
+									}
+
+								} catch (Exception e) {
+									e.getLocalizedMessage();
+								}
 							}
+						});
+						getInput.start();
+
+						while(gotData == 1) {}
+
+						if(gotData == 0) {
+							Toast.makeText(getBaseContext(),"No data received, refreshing",Toast.LENGTH_LONG).show();
+							refresh();
 						}
+
+
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -442,7 +476,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		};
 
 		if(storedDevices.size() == 0) {
-			TextView t = new TextView(this);
+			TextView t = new TextView(getBaseContext());
 			t.setTextSize(20);
 			t.setTextColor(Color.argb(255, 0, 162, 232));
 			t.setText("Refreshing");
