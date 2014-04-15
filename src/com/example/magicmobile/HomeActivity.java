@@ -1,16 +1,14 @@
-package com.example.androidprototypeapp;
+package com.example.magicmobile;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Set;
 import java.util.UUID;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -22,9 +20,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,35 +34,31 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
+@SuppressLint("HandlerLeak")
 public class HomeActivity extends Activity implements AnimationListener  {
 	public final static String EXTRA_MESSAGE = "com.example.androidprototypeapp.MESSAGE";
-	public Boolean loaded = false;
 	public static final String PREFS_NAME = "MyPrefsFile";
-
+	private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+	
 	BluetoothDevice mmDevice;
 	BluetoothSocket mmSocket;
+	
 	ArrayList<String> storedDevices = new ArrayList<String>();
 	ArrayList<BluetoothSocket> deviceSockets = new ArrayList<BluetoothSocket>();
 	int gotData = 0;
+	Animation animFadeIn;
+	Animation moveRight;
+	int count = 0;
+	ImageView c;
+	ImageView blank;
+	Boolean reset = false;
 
-
-
-	private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-
-	private Handler handler = new Handler() {
-		@Override
-		public void handleMessage(Message msg) {
-			setContentView(R.layout.activity_main);
-			refresh();
-		}
-	};
-
+	private BluetoothAdapter BA;
 	private Handler discoverHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
@@ -80,46 +72,29 @@ public class HomeActivity extends Activity implements AnimationListener  {
 				TextView t = new TextView(getBaseContext());
 				t.setTextSize(20);
 				t.setTextColor(Color.argb(255, 0, 162, 232));
-				t.setText("There were no found devices. Try refreshing by pressing the button in the top-right corner");
+				t.setText(R.string.no_devices_found);
 				l.addView(t);				
 			}
 		}
 	};
 
-	Animation animFadeIn;
-	Animation moveRight;
-	int count = 0;
-	ImageView c;
-	ImageView blank;
-	Boolean reset = false;
-
-	private BluetoothAdapter BA;
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		BA = BluetoothAdapter.getDefaultAdapter();
-		/*
-		//Introduction Version
-		setContentView(R.layout.logo_screen);
-		handler.sendMessageDelayed(new Message(), 2000);
-		 */
-
-		//Simple Version
 		setContentView(R.layout.activity_main);
 		refresh();
-
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
+		//getMenuInflater().inflate(R.menu.main, menu);
 		return true;
 	}
 
 	public void television(String address) {
-		Intent intent = new Intent(this, TelevisionActivity.class);
+		Intent intent = new Intent(this, TransmitterActuator.class);
 		intent.putExtra("Address", address);
 		startActivity(intent);
 	}
@@ -166,7 +141,6 @@ public class HomeActivity extends Activity implements AnimationListener  {
 					byte[] toSend = message.getBytes();
 					outStream.write(toSend);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -227,13 +201,12 @@ public class HomeActivity extends Activity implements AnimationListener  {
 						while(gotData == 1) {}
 
 						if(gotData == 0) {
-							Toast.makeText(getBaseContext(),"No data received, refreshing",Toast.LENGTH_LONG).show();
+							Toast.makeText(getBaseContext(),R.string.no_data,Toast.LENGTH_LONG).show();
 							refresh();
 						}
 
 
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -356,19 +329,14 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 	@Override
 	public void onAnimationEnd(Animation animation) {
-
 	}
 
 	@Override
 	public void onAnimationRepeat(Animation animation) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void onAnimationStart(Animation animation) {
-		// TODO Auto-generated method stub
-
 	}
 
 	public void refresh(View view) {
@@ -392,7 +360,6 @@ public class HomeActivity extends Activity implements AnimationListener  {
 				try {
 					deviceSockets.get(i).close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -479,7 +446,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 			TextView t = new TextView(getBaseContext());
 			t.setTextSize(20);
 			t.setTextColor(Color.argb(255, 0, 162, 232));
-			t.setText("Refreshing");
+			t.setText(R.string.refreshing);
 			l.addView(t);
 		}
 

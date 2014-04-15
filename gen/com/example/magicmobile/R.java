@@ -5,7 +5,7 @@
  * should not be modified by hand.
  */
 
-package com.example.androidprototypeapp;
+package com.example.magicmobile;
 
 public final class R {
     public static final class anim {
@@ -68,8 +68,7 @@ public final class R {
     public static final class layout {
         public static final int activity_main=0x7f030000;
         public static final int activity_television=0x7f030001;
-        public static final int button_light=0x7f030002;
-        public static final int logo_screen=0x7f030003;
+        public static final int logo_screen=0x7f030002;
     }
     public static final class menu {
         public static final int device_options=0x7f090000;
@@ -83,20 +82,14 @@ public final class R {
         /**  App Details 
          */
         public static final int app_name=0x7f060000;
-        public static final int central_heating=0x7f060007;
+        public static final int no_data=0x7f060008;
         /**  Home Labels 
          */
-        public static final int light_switch=0x7f060006;
+        public static final int no_devices_found=0x7f060006;
         public static final int one=0x7f060003;
-        public static final int other_thing=0x7f060009;
+        public static final int refreshing=0x7f060007;
         public static final int three=0x7f060005;
-        public static final int title_activity_central_heating=0x7f06000c;
-        public static final int title_activity_light_switch=0x7f06000b;
-        /**  Page Titles 
-         */
-        public static final int title_activity_main=0x7f06000a;
-        public static final int title_activity_television=0x7f06000d;
-        public static final int tv=0x7f060008;
+        public static final int title_activity_television=0x7f060009;
         public static final int two=0x7f060004;
         /**  Constants 
          */

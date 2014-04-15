@@ -1,4 +1,4 @@
-package com.example.androidprototypeapp;
+package com.example.magicmobile;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,7 +17,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,7 +28,7 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class TelevisionActivity extends Activity {
+public class TransmitterActuator extends Activity {
 
 	private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 	public static final String PREFS_NAME = "MyPrefsFile";
@@ -104,7 +103,6 @@ public class TelevisionActivity extends Activity {
 					c = ((char) intIn);
 				}
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -123,7 +121,6 @@ public class TelevisionActivity extends Activity {
 			toSend = ("x").getBytes();
 			out.write(toSend);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -148,7 +145,6 @@ public class TelevisionActivity extends Activity {
 			in = sock.getInputStream();
 			out = sock.getOutputStream();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -224,7 +220,6 @@ public class TelevisionActivity extends Activity {
 					out.write(toSend);
 					sendIntArray(code, out);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}			
 			}
@@ -366,7 +361,6 @@ public class TelevisionActivity extends Activity {
 				Toast.makeText(getBaseContext(),"Cannot find data",Toast.LENGTH_LONG).show();
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -383,12 +377,10 @@ public class TelevisionActivity extends Activity {
 
 	@Override
 	protected void onStop() {
-		// TODO Auto-generated method stub
 		super.onStop();
 		try {
 			sock.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

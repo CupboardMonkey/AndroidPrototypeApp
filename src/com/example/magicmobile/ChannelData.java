@@ -1,4 +1,4 @@
-package com.example.androidprototypeapp;
+package com.example.magicmobile;
 
 import java.util.ArrayList;
 

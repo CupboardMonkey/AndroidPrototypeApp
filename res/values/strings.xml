@@ -2,7 +2,7 @@
 <resources>
     
     <!-- App Details -->    
-    <string name="app_name">Android Prototype</string>
+    <string name="app_name">MagicMobile</string>
     <string name="action_settings">Settings</string>
     
     <!-- Constants -->
@@ -12,17 +12,12 @@
     <string name="three">3</string>
     
     <!-- Home Labels -->
-    <string name="light_switch">Light Switch</string>
-    <string name="central_heating">Central Heating</string>
-    <string name="tv">Television</string>
-    <string name="other_thing">Other</string>
+    <string name="no_devices_found">There were no found devices. Try refreshing by pressing the button in the top-right corner</string>
+    <string name="refreshing">Refreshing</string>
+    <string name="no_data">No data received, refreshing</string>
+    <string name="title_activity_television">Remote Control Mode</string>
     
-    <!-- Page Titles -->
-    <string name="title_activity_main">Home</string>
-    <string name="title_activity_light_switch">Light Switch Mode</string>
-    <string name="title_activity_central_heating">Central Heating Mode</string>
-    <string name="title_activity_television">Television Mode</string>
-
+    
     <!-- Colours -->
     <color name="text_blue">#00a2e8</color>
     
