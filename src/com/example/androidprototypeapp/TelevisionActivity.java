@@ -44,6 +44,7 @@ public class TelevisionActivity extends Activity {
 	BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
 	int idCounter;
 	int gotData = 0;
+	String temp = "";
 
 	@SuppressLint("NewApi")
 	@Override
@@ -81,11 +82,11 @@ public class TelevisionActivity extends Activity {
 		return intList;
 	}
 
-	public int getInt(InputStream in) {
+	public int getInt(final InputStream in) {
 
-		String temp = "";
+		temp = "";
+
 		boolean cond = true;
-
 		while(cond) {
 			char c;
 			try {
@@ -94,6 +95,7 @@ public class TelevisionActivity extends Activity {
 					c = ((char) intIn);
 					if(c == 'x') {
 						cond = false;
+						gotData = 2;
 					} else {
 						temp += c;
 					}
@@ -105,8 +107,11 @@ public class TelevisionActivity extends Activity {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+
 		}
+
 		return (Integer.parseInt(temp));
+
 	}
 
 	public void sendInt(Integer i, OutputStream out) {
@@ -123,7 +128,7 @@ public class TelevisionActivity extends Activity {
 		}
 	}
 
-	public void sendIntArray(ArrayList<Integer> intList, OutputStream out, InputStream in) {
+	public void sendIntArray(ArrayList<Integer> intList, OutputStream out) {
 
 		sendInt(intList.size(), out);
 		for(int i = 0; i < intList.size(); i++) {
@@ -217,7 +222,7 @@ public class TelevisionActivity extends Activity {
 					String message = "1";
 					byte[] toSend = message.getBytes();
 					out.write(toSend);
-					sendIntArray(code, out, in);
+					sendIntArray(code, out);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -308,6 +313,7 @@ public class TelevisionActivity extends Activity {
 	}
 
 	public void record(int id) {
+		gotData = 1;
 		try {
 			final ChannelData cd = getCDbyID(id);
 			if(cd != null) {
@@ -315,15 +321,46 @@ public class TelevisionActivity extends Activity {
 				byte[] toSend = message.getBytes();
 				out.write(toSend);
 
+				Thread getInput = new Thread(new Runnable() {
+					@SuppressLint("NewApi")
+					@Override
+					public void run() {
+						try {
+							while(in.available() > 0) {
+								in.read();
+							}
+							int count = 0;
+							while(count < 100) {
+								Thread.sleep(100);
+								if(in.available() > 0) {
+									count = 200;
+									gotData = 2;
+								} else {
+									if(count == 99) {
+										gotData = 0;
+									} else {
+										count++;
+									}
+								}
+							}
+						} catch (Exception e) {
+							e.getLocalizedMessage();
+						}
+					}
+				});
 
-				//if(in.available() > 0) {
+
+				getInput.start();
+
+				if(waitForInput()) {
+					getInput.interrupt();				
 					cd.setCode(getArray(in));
 					loadButtons();
-
-				//} else {
-				//	System.out.println("Unavailable");
-				//}
-
+					Toast.makeText(getBaseContext(),"Command Saved",Toast.LENGTH_SHORT).show();
+				} else {
+					getInput.interrupt();
+					Toast.makeText(getBaseContext(),"Timeout/Connection Lost",Toast.LENGTH_LONG).show();
+				}
 
 			} else {
 				Toast.makeText(getBaseContext(),"Cannot find data",Toast.LENGTH_LONG).show();
@@ -402,4 +439,14 @@ public class TelevisionActivity extends Activity {
 	public void returnHome(View view) {
 		this.finish();
 	}
+
+	public boolean waitForInput() {
+		while(gotData == 1) {}
+		if(gotData == 0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
 }
