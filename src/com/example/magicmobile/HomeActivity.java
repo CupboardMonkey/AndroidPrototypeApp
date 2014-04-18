@@ -38,27 +38,20 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
 @SuppressLint("HandlerLeak")
 public class HomeActivity extends Activity implements AnimationListener  {
-	public final static String EXTRA_MESSAGE = "com.example.androidprototypeapp.MESSAGE";
+
+	//Location of shared preferences
 	public static final String PREFS_NAME = "MyPrefsFile";
+	//UUID needed to establish a connection
 	private final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-	
-	BluetoothDevice mmDevice;
-	BluetoothSocket mmSocket;
-	
-	ArrayList<String> storedDevices = new ArrayList<String>();
-	ArrayList<BluetoothSocket> deviceSockets = new ArrayList<BluetoothSocket>();
-	int gotData = 0;
-	Animation animFadeIn;
-	Animation moveRight;
-	int count = 0;
-	ImageView c;
-	ImageView blank;
-	Boolean reset = false;
 
 	private BluetoothAdapter BA;
+	ArrayList<String> storedDevices = new ArrayList<String>();
+	ArrayList<BluetoothSocket> deviceSockets = new ArrayList<BluetoothSocket>();
+	int gotData = 0;	
+
+	//Handler for refreshing
 	private Handler discoverHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
@@ -88,41 +81,39 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		//getMenuInflater().inflate(R.menu.main, menu);
 		return true;
 	}
 
+	//Go to TA mode
 	public void television(String address) {
 		Intent intent = new Intent(this, TransmitterActuator.class);
 		intent.putExtra("Address", address);
 		startActivity(intent);
 	}
 
+	//Various methods used to animate a button creation
 	public void appear(Button b) {
 		Animation anim = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in);
 		anim.setAnimationListener(this);
 		b.startAnimation(anim);		
 	}
-
 	public void delayedAppear(Button b) {
 		Animation anim = AnimationUtils.loadAnimation(this, R.anim.delayed_anim_fade_in);
 		anim.setAnimationListener(this);
 		b.startAnimation(anim);		
 	}
-
 	public void appearAndSlide(Button b) {
 		Animation anim = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in_translate_right);
 		anim.setAnimationListener(this);
 		b.startAnimation(anim);		
 	}	
-
 	public void appearAndHide(Button b) {
 		Animation anim = AnimationUtils.loadAnimation(this, R.anim.anim_fade_in_hide);
 		anim.setAnimationListener(this);
 		b.startAnimation(anim);		
 	}
 
+	//Method to create a button, giving different functionality dependent on mode
 	public void createButton(String name, final BluetoothDevice device, final BluetoothSocket socket, String mode, Boolean prox) {
 		Button b = new Button(this);
 		b.setAlpha(0f);
@@ -132,7 +123,10 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		b.setTextColor(Color.argb(255, 0, 162, 232));
 
 		Button.OnClickListener btnclick = null;
+
+		//If device is an IA
 		if(mode.equals("IA")) {
+			//Check if device should be activated on proximity
 			if(prox) {
 				OutputStream outStream;
 				try {
@@ -152,6 +146,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 					final InputStream inStream;
 					final OutputStream outStream;	
 					try {
+						//Request current output level
 						outStream = socket.getOutputStream();
 						String message = "r";
 
@@ -159,22 +154,27 @@ public class HomeActivity extends Activity implements AnimationListener  {
 						outStream.write(toSend);
 						inStream = socket.getInputStream();
 
-
+						//Data collection is pending
 						gotData = 1;
+
+						//Run timer in thread to prevent stalling
 						Thread getInput = new Thread(new Runnable() {
 							@Override
 							public void run() {
 								try {
+									//Give small delay
 									Thread.sleep(100);
 
 									byte byt[] = new byte[1];
 
+									//Check if reply from IA
 									if(inStream.available() > 0) {
 										int received = inStream.read(byt, 0, 1);
 										inStream.read();
 										inStream.read();
 
 										if(received == 1) {
+											//Toggle output power level
 											if(((int)byt[0] & 0xff) == '0') {
 												String message = "1";
 												byte[] toSend = message.getBytes();
@@ -186,8 +186,12 @@ public class HomeActivity extends Activity implements AnimationListener  {
 											}
 
 										} 
+										//Data received
 										gotData = 2;
+
+										//Else no reply, IA has lost connection
 									} else {
+										//No data received
 										gotData = 0;
 									}
 
@@ -198,8 +202,10 @@ public class HomeActivity extends Activity implements AnimationListener  {
 						});
 						getInput.start();
 
+						//Wait until gotData is 0 or 2
 						while(gotData == 1) {}
 
+						//If not data then notify and refresh
 						if(gotData == 0) {
 							Toast.makeText(getBaseContext(),R.string.no_data,Toast.LENGTH_LONG).show();
 							refresh();
@@ -211,6 +217,8 @@ public class HomeActivity extends Activity implements AnimationListener  {
 					}
 				}
 			};
+
+			//Or if device is TA
 		} else if(mode.equals("TA")) {
 			b.setCompoundDrawablesWithIntrinsicBounds(R.drawable.tv_icon, 0, 0, 0);
 			btnclick = new Button.OnClickListener(){
@@ -223,29 +231,35 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 		b.setOnClickListener(btnclick);
 
-		final Button b1 = new Button(this);
+		final Button settingsButton = new Button(this);
 
-		b1.setHeight(60);
-		b1.setWidth(60);
-		b1.setBackgroundResource(R.drawable.settings);
-		b1.setTextColor(Color.argb(255, 0, 162, 232));
-		b1.setTag(R.string.zero, device.getAddress());
-		b1.setTag(R.string.one, b);
+		settingsButton.setHeight(60);
+		settingsButton.setWidth(60);
+		settingsButton.setBackgroundResource(R.drawable.settings);
+		settingsButton.setTextColor(Color.argb(255, 0, 162, 232));
+		//Set associated variables
+		settingsButton.setTag(R.string.zero, device.getAddress());
+		settingsButton.setTag(R.string.one, b);
 
 
 		Button.OnClickListener popup = null;
 
+		//TA settings
 		if(mode.equals("TA")) {
 
 			popup = new Button.OnClickListener() {  
 
 				@Override  
 				public void onClick(final View v) {  
-					PopupMenu popup = new PopupMenu(getApplicationContext(), b1);
+					PopupMenu popup = new PopupMenu(getApplicationContext(), settingsButton);
+
+					//Use layout for TA settings
 					popup.getMenuInflater().inflate(R.menu.device_options, popup.getMenu());  
 
 					popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
-						public boolean onMenuItemClick(MenuItem item) {  
+						public boolean onMenuItemClick(MenuItem item) {
+
+							//If rename button was pressed
 							if(item.getTitle().equals("Rename")) {
 								rename(v.getTag(R.string.zero), v.getTag(R.string.one));
 							}  
@@ -256,13 +270,15 @@ public class HomeActivity extends Activity implements AnimationListener  {
 					popup.show();  
 				}  
 			};
+
+			//IA settings
 		} else if (mode.equals("IA")) {
 
 			popup = new Button.OnClickListener() {  
 
 				@Override  
 				public void onClick(final View v) {  
-					PopupMenu popup = new PopupMenu(getApplicationContext(), b1);
+					PopupMenu popup = new PopupMenu(getApplicationContext(), settingsButton);
 					popup.getMenuInflater().inflate(R.menu.ia_device_options, popup.getMenu());  
 
 					popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
@@ -270,9 +286,9 @@ public class HomeActivity extends Activity implements AnimationListener  {
 							if(item.getTitle().equals("Rename")) {
 								rename(v.getTag(R.string.zero), v.getTag(R.string.one));
 							}
+
 							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 							SharedPreferences.Editor editor = settings.edit();
-
 
 							if(item.getTitle().equals("Activate on proximity")) {
 								editor.putBoolean(device.getAddress()+"prox", true);
@@ -291,14 +307,15 @@ public class HomeActivity extends Activity implements AnimationListener  {
 				}  
 			};
 		}
-		b1.setOnClickListener(popup);
+		settingsButton.setOnClickListener(popup);
 
+		//Add button to list and animate
 		ViewGroup layout = (ViewGroup) findViewById(R.id.home_page);
 		RelativeLayout LL = new RelativeLayout(this);
 		LL.setMinimumHeight(90);
 
-		b1.setX(310);
-		b1.setY(10);
+		settingsButton.setX(310);
+		settingsButton.setY(10);
 
 		Button cover = new Button(this);
 		cover.setBackgroundResource(R.drawable.scroll_cover);
@@ -318,10 +335,10 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		deleteObject(cover, 2000);
 		deleteObject(block, 1000);
 
-		delayedAppear(b1);
+		delayedAppear(settingsButton);
 
 		LL.addView(b);
-		LL.addView(b1);
+		LL.addView(settingsButton);
 		LL.addView(block);
 		LL.addView(cover);		
 		layout.addView(LL);
@@ -346,14 +363,16 @@ public class HomeActivity extends Activity implements AnimationListener  {
 	@SuppressLint("NewApi")
 	public void refresh() {
 
+		//Disable refresh button to prevent errors
 		Button ref = (Button) findViewById(R.id.refresh);
 		ref.setEnabled(false);
-		reset = false;
-
 		ref.setBackgroundResource(R.drawable.refreshing);
 
+		//Clear list
 		final LinearLayout l = (LinearLayout) findViewById(R.id.home_page);
 		l.removeAllViews();
+
+		//For any IA, kill connection
 		for(int i = 0; i < storedDevices.size(); i++) {
 			BluetoothDevice temp = BA.getRemoteDevice(storedDevices.get(i));
 			if(temp.getName().equals("MagMobIA")) {
@@ -364,6 +383,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 				}
 			}
 		}
+
 		storedDevices.clear();
 		deviceSockets.clear();
 
@@ -373,6 +393,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 		BA.startDiscovery();
 
+		//Reactivate refresh in 12 seconds
 		discoverHandler.sendMessageDelayed(new Message(), 12000);
 
 		BroadcastReceiver BR = new BroadcastReceiver() {
@@ -380,68 +401,63 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 				String action = intent.getAction();
 
-				System.out.println("Action: " + action);
-
 				if (BluetoothDevice.ACTION_FOUND.equals(action)) 
 				{
-					// Get the BluetoothDevice object from the Intent
+					//Get the Bluetooth device
 					BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 					System.out.println(device.getAddress());
 
-					BluetoothSocket tmp = null;
-					mmDevice = device;
+					BluetoothSocket socket = null;
 
-					if(mmDevice.getName().equals("MagMobIA")) {
+					//If connecting to an IA
+					if(device.getName().equals("MagMobIA")) {
 
-						if(!storedDevices.contains(mmDevice.getAddress())) {
+						//And device has not been added then add
+						if(!storedDevices.contains(device.getAddress())) {
 							if(storedDevices.size() == 0) {
 								l.removeAllViews();
 							}
-							storedDevices.add(mmDevice.getAddress());
+							storedDevices.add(device.getAddress());
 
-							// Get a BluetoothSocket to connect with the given BluetoothDevice
+							//Connect to IA
 							try {
-								// MY_UUID is the app's UUID string, also used by the server code
-								tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
-							} catch (IOException e) { }
-							mmSocket = tmp;
-							try {
-								//Connect the device through the socket. This will block
-								//until it succeeds or throws an exception
-								mmSocket.connect();
-							} catch (IOException connectException) {
-								//Unable to connect; close the socket and get out
+								socket = device.createRfcommSocketToServiceRecord(MY_UUID);
+								socket.connect();
+							} catch (IOException e) { 
+								e.printStackTrace();
 								try {
-									connectException.printStackTrace();
-									mmSocket.close();
-								} catch (IOException closeException) { }
+									socket.close();
+								} catch (IOException e2) { 
+									e2.printStackTrace();
+								}
 							}
 
 							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 
+							//Create the button and add the socket connection to saved list
 							Boolean prox = settings.getBoolean(device.getAddress()+"prox", false);
-							System.out.println("Prox: " + prox);
 							String name = settings.getString(device.getAddress(), "Unknown Device");
-							deviceSockets.add(mmSocket);
-							createButton(name, device, mmSocket, "IA", prox);
+							deviceSockets.add(socket);
+							createButton(name, device, socket, "IA", prox);
 
 						}
-					} else if(mmDevice.getName().equals("MagMobTA")) {
-						if(!storedDevices.contains(mmDevice.getAddress())) {
+					} else if(device.getName().equals("MagMobTA")) {
+						if(!storedDevices.contains(device.getAddress())) {
 							if(storedDevices.size() == 0) {
 								l.removeAllViews();
 							}
-							storedDevices.add(mmDevice.getAddress());
+							storedDevices.add(device.getAddress());
 							SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 							String name = settings.getString(device.getAddress(), "Unknown Device");
 							deviceSockets.add(null);
-							createButton(name, mmDevice, null, "TA", false);
+							createButton(name, device, null, "TA", false);
 						}
 					} 
 				}
 			}
 		};
 
+		//Display refreshing if no devices currently found
 		if(storedDevices.size() == 0) {
 			TextView t = new TextView(getBaseContext());
 			t.setTextSize(20);
@@ -455,6 +471,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 	}
 
+	//Convenience method for saving string shared preference
 	public void renamePreference(String key, String text) {
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		SharedPreferences.Editor editor = settings.edit();
@@ -463,6 +480,7 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		editor.commit();
 	}
 
+	//Rename device method
 	public void rename(Object addressObj, Object buttonObj) {
 
 		final String address = addressObj.toString();
@@ -473,16 +491,17 @@ public class HomeActivity extends Activity implements AnimationListener  {
 		alert.setTitle("Title");
 		alert.setMessage("Message");
 
-		// Set an EditText view to get user input 
+		//Get user input
 		final EditText input = new EditText(this);
 		input.setText(b.getText());
 
 		alert.setTitle("Rename");
 		alert.setMessage("Rename button to:");
 		alert.setView(input);
-
+		
 		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
+				//Save text
 				b.setText(input.getText().toString());
 				renamePreference(address, input.getText().toString());
 			}
@@ -490,13 +509,14 @@ public class HomeActivity extends Activity implements AnimationListener  {
 
 		alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
-				// Cancelled.
+				//Cancel window
 			}
 		});
 
 		alert.show();
 	}
 
+	//Methods to remove object after x time
 	private Handler deleteObj = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {

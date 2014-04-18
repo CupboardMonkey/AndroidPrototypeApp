@@ -38,7 +38,6 @@ public class TransmitterActuator extends Activity {
 	InputStream in;
 	OutputStream out;
 
-	ArrayList<Integer> channelCode;
 	ArrayList<ChannelData> signals = new ArrayList<ChannelData>();
 	BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
 	int idCounter;
@@ -51,8 +50,7 @@ public class TransmitterActuator extends Activity {
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.activity_television);
-		Intent intenty = getIntent();
-		String address = intenty.getStringExtra("Address");
+		String address = getIntent().getStringExtra("Address");
 		getDetails(address);		
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		idCounter = settings.getInt(device.getAddress()+"id", 0);
@@ -69,8 +67,7 @@ public class TransmitterActuator extends Activity {
 		return super.onOptionsItemSelected(item);
 	}
 
-
-
+	//Method to get integer array from TA
 	public ArrayList<Integer> getArray(InputStream in) {
 		int size = getInt(in);
 		ArrayList<Integer> intList = new ArrayList<Integer>();
@@ -81,6 +78,7 @@ public class TransmitterActuator extends Activity {
 		return intList;
 	}
 
+	//Method to get single int from TA
 	public int getInt(final InputStream in) {
 
 		temp = "";
@@ -90,8 +88,10 @@ public class TransmitterActuator extends Activity {
 			char c;
 			try {
 				int intIn = in.read();
+				//If intIn is an valid char
 				if(intIn < 128 && intIn > 47) {
 					c = ((char) intIn);
+					//'x' signifies end of string
 					if(c == 'x') {
 						cond = false;
 						gotData = 2;
@@ -112,6 +112,7 @@ public class TransmitterActuator extends Activity {
 
 	}
 
+	//Method to sent single int to TA
 	public void sendInt(Integer i, OutputStream out) {
 		try {
 			String s = i.toString();
@@ -125,6 +126,7 @@ public class TransmitterActuator extends Activity {
 		}
 	}
 
+	//Method to send int array to TA
 	public void sendIntArray(ArrayList<Integer> intList, OutputStream out) {
 
 		sendInt(intList.size(), out);
@@ -134,8 +136,7 @@ public class TransmitterActuator extends Activity {
 
 	}
 
-
-
+	//Method to establish connection to TA
 	public void getDetails(String address) {
 		device = BA.getRemoteDevice(address);
 
@@ -149,6 +150,7 @@ public class TransmitterActuator extends Activity {
 		}
 	}
 
+	//Returns channelData location
 	public int getChannelData(int id) {
 		for(int i = 0; i < signals.size(); i++) {
 			if(signals.get(i).getId() == id) {
@@ -158,15 +160,19 @@ public class TransmitterActuator extends Activity {
 		return -1;
 	}
 
+	//Method to refresh list of buttons
 	public void loadButtons() {
 
 		ViewGroup layout = (ViewGroup) findViewById(R.id.remote);
 		layout.removeAllViews();
+		
+		//If buttons are stored
 		if(signals.size() > 0) {
+			//Create all buttons
 			for (int i = 0; i < signals.size(); i++) {
-				System.out.println(signals.get(i).getId() + " " + signals.get(i).getLabel());
 				create(signals.get(i));
 			}
+		//Else display message
 		} else {
 			TextView t = new TextView(this);
 			t.setTextSize(20);
@@ -174,24 +180,29 @@ public class TransmitterActuator extends Activity {
 			t.setText("There are no stored commands. Try adding one by pressing the button in the top-right corner");
 			layout.addView(t);
 		}
+		//Save list of buttons
 		saveButtons();
 	}
 
+	//Method to create a new button
 	public void newCreate(View view) {
 		ChannelData temp = new ChannelData(idCounter,new ArrayList<Integer>(),"Unnamed");
 
+		//Increase ID reference
 		idCounter++;
 
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		SharedPreferences.Editor editor = settings.edit();
 		editor.putInt(device.getAddress()+"id", idCounter);
 		editor.commit();
+		
 		signals.add(temp);
 		create(temp);
 		saveButtons();
 		loadButtons();
 	}
 
+	//Create a button given channel data
 	public void create(final ChannelData cd) {
 		final ArrayList<Integer> code = cd.getCode();
 		String label = cd.getLabel();
@@ -202,12 +213,12 @@ public class TransmitterActuator extends Activity {
 		b.setText(label);
 		b.setTextColor(Color.argb(255, 0, 162, 232));
 
-		final Button b1 = new Button(this);
-		b1.setHeight(60);
-		b1.setWidth(60);
-		b1.setBackgroundResource(R.drawable.settings);
-		b1.setTextColor(Color.argb(255, 0, 162, 232));
-		b1.setTag(cd.getId());
+		final Button settingsButton = new Button(this);
+		settingsButton.setHeight(60);
+		settingsButton.setWidth(60);
+		settingsButton.setBackgroundResource(R.drawable.settings);
+		settingsButton.setTextColor(Color.argb(255, 0, 162, 232));
+		settingsButton.setTag(cd.getId());
 
 		Button.OnClickListener btnclick = new Button.OnClickListener(){
 
@@ -215,6 +226,7 @@ public class TransmitterActuator extends Activity {
 			public void onClick(View v) {
 
 				try {
+					//Send '1' message to TA to transmit
 					String message = "1";
 					byte[] toSend = message.getBytes();
 					out.write(toSend);
@@ -229,13 +241,11 @@ public class TransmitterActuator extends Activity {
 		Button.OnClickListener popup = new Button.OnClickListener() {  
 
 			@Override  
-			public void onClick(final View v) {  
-				//Creating the instance of PopupMenu  
-				PopupMenu popup = new PopupMenu(getApplicationContext(), b1);  
-				//Inflating the Popup using xml file  
+			public void onClick(final View v) {    
+				PopupMenu popup = new PopupMenu(getApplicationContext(), settingsButton);  
+				//Inflating the Popup using XML file  
 				popup.getMenuInflater().inflate(R.menu.transmitter_options, popup.getMenu());  
-
-				//registering popup with OnMenuItemClickListener  
+				
 				popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {  
 					public boolean onMenuItemClick(MenuItem item) {  
 						if(item.getTitle().equals("Rename")) {
@@ -252,14 +262,15 @@ public class TransmitterActuator extends Activity {
 			}  
 		};
 
-		b1.setOnClickListener(popup);
+		settingsButton.setOnClickListener(popup);
 		ViewGroup layout = (ViewGroup) findViewById(R.id.remote);
 		LinearLayout LL = new LinearLayout(this);
 		LL.addView(b);
-		LL.addView(b1);
+		LL.addView(settingsButton);
 		layout.addView(LL);
 	}
 
+	//Convenience method to get channelData
 	public ChannelData getCDbyID(int id) {
 		for(ChannelData cd : signals) {
 			if(cd.getId() == id) {
@@ -269,6 +280,7 @@ public class TransmitterActuator extends Activity {
 		return null;
 	}
 
+	//Rename button method
 	public void rename(int id) {
 		final ChannelData cd = getCDbyID(id);
 		if(cd != null) {
@@ -276,8 +288,7 @@ public class TransmitterActuator extends Activity {
 
 			alert.setTitle("Title");
 			alert.setMessage("Message");
-
-			// Set an EditText view to get user input 
+ 
 			final EditText input = new EditText(this);
 			input.setText(cd.getLabel());
 
@@ -293,9 +304,7 @@ public class TransmitterActuator extends Activity {
 			});
 
 			alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int whichButton) {
-					// Cancelled.
-				}
+				public void onClick(DialogInterface dialog, int whichButton) {}
 			});
 
 			alert.show();
@@ -307,15 +316,19 @@ public class TransmitterActuator extends Activity {
 
 	}
 
+	//Method to store new IR signal
 	public void record(int id) {
 		gotData = 1;
 		try {
 			final ChannelData cd = getCDbyID(id);
+			
 			if(cd != null) {
+				//Send '0' message to TA to start recording
 				String message = "0";
 				byte[] toSend = message.getBytes();
 				out.write(toSend);
 
+				//10 second timeout in new thread
 				Thread getInput = new Thread(new Runnable() {
 					@SuppressLint("NewApi")
 					@Override
@@ -365,6 +378,7 @@ public class TransmitterActuator extends Activity {
 		}
 	}
 
+	//Delete button method
 	public void delete(int id) {
 		ChannelData cd = getCDbyID(id);
 		if(cd != null) {
@@ -375,6 +389,7 @@ public class TransmitterActuator extends Activity {
 		}
 	}
 
+	//Close connection if activity ends
 	@Override
 	protected void onStop() {
 		super.onStop();
@@ -385,6 +400,7 @@ public class TransmitterActuator extends Activity {
 		}
 	}
 
+	//Save current buttons
 	public void saveButtons() {
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		SharedPreferences.Editor editor = settings.edit();
@@ -397,6 +413,7 @@ public class TransmitterActuator extends Activity {
 		}
 	}
 
+	//Save object as Gson string
 	public void saveObject(String key, Object o) {
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		SharedPreferences.Editor editor = settings.edit();
@@ -407,6 +424,7 @@ public class TransmitterActuator extends Activity {
 		editor.commit();
 	}
 
+	//Method to decode saved Gson string
 	public ChannelData getChannelData(String key) {
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		Gson gson = new Gson();
@@ -415,6 +433,7 @@ public class TransmitterActuator extends Activity {
 		return obj;
 	}
 
+	//Load buttons saved in shared preferences
 	public void loadSavedButtons() {
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		String add = device.getAddress();
@@ -428,10 +447,12 @@ public class TransmitterActuator extends Activity {
 		loadButtons();
 	}
 
+	//Home method
 	public void returnHome(View view) {
 		this.finish();
 	}
 
+	//Wait while data is received
 	public boolean waitForInput() {
 		while(gotData == 1) {}
 		if(gotData == 0) {
